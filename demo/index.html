@@ -1,0 +1,38 @@
+<head>
+  <!-- <script type="text/javascript" src="http://cdn.clappr.io/latest/clappr.js"></script> -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clappr/0.2.63/clappr.min.js"></script>
+  <script type="text/javascript" src="../dist/clappr-google-ima-html5-preroll-plugin.js"></script>
+</head>
+<body>
+  <div id="player"></div>
+  <script>
+    (function () {
+
+      // Clappr.Log.setLevel(0)
+      var videoUrl = 'https://static.playmedia-cdn.net/resources/sample/h264_sintel_trailer-1080p.mp4'
+      // var videoUrl = 'http://www.streambox.fr/playlists/x36xhzz/x36xhzz.m3u8'
+
+      // Single Inline Linear. See https://developers.google.com/interactive-media-ads/docs/sdks/html5/tags
+      var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator='
+
+      var player = new Clappr.Player({
+        parentId: "#player",
+        source: videoUrl,
+        disableKeyboardShortcuts: true,
+        disableVideoTagContextMenu: true,
+        autoSeekFromUrl: false,
+        autoPlay: false,
+        // width: 640,
+        // height: 360,
+        plugins: {
+          core: [ClapprGoogleImaHtml5PrerollPlugin],
+        },
+        googleImaHtml5PrerollPlugin: {
+          tag: vastTag,
+          // autostart: false,
+        },
+      })
+
+    })()
+  </script>
+</body>

@@ -1,0 +1,35 @@
+@import compass/css3
+
+.google-ima-html5-preroll-plugin[data-preroll]
+  position: absolute
+  top: 0
+  left: 0
+  width: 100%
+  height: 100%
+  text-align: left
+  .preroll-container[data-preroll]
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+  .preroll-overlay[data-preroll]
+    position: absolute
+    top: 0
+    left: 0
+    width: 100%
+    height: 100%
+    z-index: 1337
+    background-color: #000
+    cursor: pointer
+    overflow: hidden
+    display: none
+    &:hover .preroll-overlay-icon[data-preroll]
+      opacity: 1
+    .preroll-overlay-icon[data-preroll]
+      position: relative
+      width: 100%
+      height: 25%
+      top: 50%
+      transform: translateY(-50%)
+      opacity: 0.75
