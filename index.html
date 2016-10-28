@@ -41,39 +41,41 @@
         <ul></ul>
       </nav>
       <section>
-        <h3><a id="google-ima-preroll-ad-plugin-for-clappr-player" class="anchor" href="#google-ima-preroll-ad-plugin-for-clappr-player" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Google IMA preroll ad plugin for Clappr player</h3>
+        <h3>
+          <a id="google-ima-preroll-ad-plugin-for-clappr-player" class="anchor" href="#google-ima-preroll-ad-plugin-for-clappr-player" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Google IMA preroll ad plugin for Clappr player
+        </h3>
 
-<p></p>
-<div id="player"></div>
-  <div id="player"></div>
-  <script>
-    (function () {
-      // Clappr.Log.setLevel(0)
-      var videoUrl = 'https://static.playmedia-cdn.net/resources/sample/h264_sintel_trailer-1080p.mp4'
+        <p></p>
+        <div class="playerContainer">
+          <div id="player"></div>
+          <script>
+            (function () {
+              // Clappr.Log.setLevel(0)
+              var videoUrl = 'https://static.playmedia-cdn.net/resources/sample/h264_sintel_trailer-1080p.mp4'
 
-      // Single Inline Linear. See https://developers.google.com/interactive-media-ads/docs/sdks/html5/tags
-      var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator='
+              // Single Inline Linear. See https://developers.google.com/interactive-media-ads/docs/sdks/html5/tags
+              var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator='
 
-      var player = new Clappr.Player({
-        parentId: "#player",
-        source: videoUrl,
-        disableKeyboardShortcuts: true,
-        disableVideoTagContextMenu: true,
-        autoSeekFromUrl: false,
-        autoPlay: false,
-        // width: 640,
-        // height: 360,
-        plugins: {
-          core: [ClapprGoogleImaHtml5PrerollPlugin],
-        },
-        googleImaHtml5PrerollPlugin: {
-          tag: vastTag,
-          // autostart: false,
-        },
-      })
-    })()
-  </script>
-
+              var player = new Clappr.Player({
+                parentId: "#player",
+                source: videoUrl,
+                disableKeyboardShortcuts: true,
+                disableVideoTagContextMenu: true,
+                autoSeekFromUrl: false,
+                autoPlay: false,
+                // width: 640,
+                // height: 360,
+                plugins: {
+                  core: [ClapprGoogleImaHtml5PrerollPlugin],
+                },
+                googleImaHtml5PrerollPlugin: {
+                  tag: vastTag,
+                  // autostart: false,
+                },
+              })
+            })()
+          </script>
+        </div>
       </section>
       <footer>
         <p>Project maintained by <a href="https://github.com/kslimani">kslimani</a></p>
