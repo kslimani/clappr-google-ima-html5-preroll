@@ -8,6 +8,8 @@ It should be supported by Clappr `0.2.x` branch version.
 
 It support ONLY [Clappr playbacks](https://github.com/clappr/clappr/tree/master/src/playbacks) which use an HTML5 video element. ('hls', 'html5_video', etc...). This mean Flash playback is not supported yet.
 
+See also [demo page](https://kslimani.github.io/clappr-google-ima-html5-preroll/) hosted on Github.
+
 # Usage
 
 Add both Clappr and the plugin scripts to your HTML:
