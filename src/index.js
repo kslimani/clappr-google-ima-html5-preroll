@@ -324,6 +324,9 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     if (this._useDummyMp4Video) {
       // Clappr HTML5 video playback stop() method remove the src element.
       this.core.mediaControl.stop()
+    } else {
+      // Trick to fix 'seek_time' plugin. https://github.com/kslimani/clappr-google-ima-html5-preroll/issues/1
+      this._contentElement.load()
     }
 
     process.nextTick(() => {
