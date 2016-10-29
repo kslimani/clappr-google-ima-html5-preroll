@@ -467,7 +467,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      process.nextTick(function () {
 	        _this6._enableControls();
-	        // this.destroy()
+	        _this6.destroy();
 	        _this6.core.mediaControl.play();
 	      });
 	    }
