@@ -326,12 +326,9 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       this.core.mediaControl.stop()
     }
 
-    // Ensure overlay is removed
-    this._$clickOverlay.hide()
-
     process.nextTick(() => {
       this._enableControls()
-      this.destroy()
+      this.$el.hide()
       this.core.mediaControl.play()
     })
   }
