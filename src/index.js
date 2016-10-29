@@ -331,7 +331,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
     process.nextTick(() => {
       this._enableControls()
-      // this.destroy()
+      this.destroy()
       this.core.mediaControl.play()
     })
   }
