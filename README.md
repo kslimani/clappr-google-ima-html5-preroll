@@ -32,8 +32,38 @@ var player = new Clappr.Player({
   googleImaHtml5PrerollPlugin: {
     tag: 'VAST_TAG_URL',
     // autostart: false, // Default is true
+    // events: { /* Event map */ },
   }
 });
+```
+
+## Events
+
+For more details, see [Google IMA events types](https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#values_3).
+
+```javascript
+  // [...]
+  googleImaHtml5PrerollPlugin: {
+    events: {
+      content_resume_requested: function() { console.log('content_resume_requested') },
+      content_pause_requested: function() { console.log('content_pause_requested') },
+      loaded: function() { console.log('loaded') },
+      click: function() { console.log('click') },
+      impression: function() { console.log('impression') },
+      started: function() { console.log('started') },
+      first_quartile: function() { console.log('first_quartile') },
+      midpoint: function() { console.log('midpoint') },
+      third_quartile: function() { console.log('third_quartile') },
+      complete: function() { console.log('complete') },
+      paused: function() { console.log('paused') },
+      resumed: function() { console.log('resumed') },
+      skipped: function() { console.log('skipped') },
+      user_close: function() { console.log('user_close') },
+      ad_error: function(e) { console.log('ad_error: ' + e.getError()) }, // AdErrorEvent
+      error: function(e) { console.log('error', e) },
+    }
+  }
+  // [...]
 ```
 
 # Development
