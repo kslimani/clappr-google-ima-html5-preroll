@@ -462,12 +462,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.core.mediaControl.stop();
 	      }
 
-	      // Ensure overlay is removed
-	      this._$clickOverlay.hide();
-
 	      process.nextTick(function () {
 	        _this6._enableControls();
-	        _this6.destroy();
+	        _this6.$el.hide();
 	        _this6.core.mediaControl.play();
 	      });
 	    }
