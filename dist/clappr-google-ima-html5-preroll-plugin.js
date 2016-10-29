@@ -127,11 +127,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _this._imaIsloaded = false;
 	    _this._pluginIsReady = false;
 
-	    _this._tag = _this.options.googleImaHtml5PrerollPlugin.tag;
-	    _this._autostart = _this.options.googleImaHtml5PrerollPlugin.autostart === false ? false : true; // Default is true
+	    var cfg = _this.options.googleImaHtml5PrerollPlugin;
+	    if (!cfg) {
+	      _this._pluginError('configuration is missing');
+	    }
+
+	    _this._tag = cfg.tag;
+	    _this._autostart = cfg.autostart === false ? false : true; // Default is true
+	    _this._events = _clappr.$.isPlainObject(cfg.events) ? cfg.events : {};
 
 	    // TODO: Add an option which is an array of plugin name to disable
-	    // TODO: Add an option which is a plain object of event function (Vast ad events)
 
 	    if (!_this._tag) {
 	      _this._pluginError('tag option is required');
@@ -335,60 +340,60 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, function () {
-	        console.log('AdEvent.CONTENT_RESUME_REQUESTED');
+	        _this4._imaEvent('content_resume_requested');
 	        _this4._playVideoContent();
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, function () {
-	        console.log('AdEvent.CONTENT_PAUSE_REQUESTED');
+	        _this4._imaEvent('content_pause_requested');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, function () {
-	        console.log('AdEvent.LOADED');
+	        _this4._imaEvent('loaded');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.CLICK, function () {
-	        console.log('AdEvent.CLICK');
+	        _this4._imaEvent('click');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.IMPRESSION, function () {
-	        console.log('AdEvent.IMPRESSION');
+	        _this4._imaEvent('impression');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, function () {
-	        console.log('AdEvent.STARTED');
+	        _this4._imaEvent('started');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.FIRST_QUARTILE, function () {
-	        console.log('AdEvent.FIRST_QUARTILE');
+	        _this4._imaEvent('first_quartile');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.MIDPOINT, function () {
-	        console.log('AdEvent.MIDPOINT');
+	        _this4._imaEvent('midpoint');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.THIRD_QUARTILE, function () {
-	        console.log('AdEvent.THIRD_QUARTILE');
+	        _this4._imaEvent('third_quartile');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, function () {
-	        console.log('AdEvent.COMPLETE');
+	        _this4._imaEvent('complete');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.PAUSED, function () {
-	        console.log('AdEvent.PAUSED');
+	        _this4._imaEvent('paused');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.RESUMED, function () {
-	        console.log('AdEvent.RESUMED');
+	        _this4._imaEvent('resumed');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.SKIPPED, function () {
-	        console.log('AdEvent.SKIPPED');
+	        _this4._imaEvent('skipped');
 	      });
 
 	      this._adsManager.addEventListener(google.ima.AdEvent.Type.USER_CLOSE, function () {
-	        console.log('AdEvent.USER_CLOSE');
+	        _this4._imaEvent('user_close');
 	      });
 
 	      this._setupOverlay();
@@ -398,8 +403,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function _onAdError(adErrorEvent) {
 	      // google.ima.AdErrorEvent : https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdErrorEvent
 	      // google.ima.AdError : https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdError
-	      console.log('onAdError: ' + adErrorEvent.getError());
+	      // console.log('onAdError: ' + adErrorEvent.getError())
+	      this._imaEvent('ad_error', adErrorEvent);
 	      this._playVideoContent();
+	    }
+	  }, {
+	    key: '_imaEvent',
+	    value: function _imaEvent(eventName, e) {
+	      _clappr.$.isFunction(this._events[eventName]) && this._events[eventName](e);
 	    }
 	  }, {
 	    key: '_setupOverlay',
@@ -444,7 +455,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._adsManager.init(this._contentElement.offsetWidth, this._contentElement.offsetHeight, google.ima.ViewMode.NORMAL);
 	        this._adsManager.start();
 	      } catch (e) {
-	        console.log('adsManager catched error', e);
+	        // console.log('adsManager catched error', e)
+	        this._imaEvent('error', e);
 	        this._playVideoContent();
 	      }
 	    }
@@ -460,6 +472,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (this._useDummyMp4Video) {
 	        // Clappr HTML5 video playback stop() method remove the src element.
 	        this.core.mediaControl.stop();
+	      } else {
+	        // Trick to fix 'seek_time' plugin. https://github.com/kslimani/clappr-google-ima-html5-preroll/issues/1
+	        this._contentElement.load();
 	      }
 
 	      process.nextTick(function () {
