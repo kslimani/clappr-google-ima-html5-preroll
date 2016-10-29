@@ -22,11 +22,16 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._imaIsloaded = false
     this._pluginIsReady = false
 
-    this._tag = this.options.googleImaHtml5PrerollPlugin.tag
-    this._autostart = this.options.googleImaHtml5PrerollPlugin.autostart === false ? false : true // Default is true
+    let cfg = this.options.googleImaHtml5PrerollPlugin
+    if (!cfg) {
+      this._pluginError('configuration is missing')
+    }
+
+    this._tag = cfg.tag
+    this._autostart = cfg.autostart === false ? false : true // Default is true
+    this._events = $.isPlainObject(cfg.events) ? cfg.events : {}
 
     // TODO: Add an option which is an array of plugin name to disable
-    // TODO: Add an option which is a plain object of event function (Vast ad events)
 
     if (!this._tag) {
       this._pluginError('tag option is required')
@@ -213,60 +218,60 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     })
     
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, () => {
-      console.log('AdEvent.CONTENT_RESUME_REQUESTED')
+      this._imaEvent('content_resume_requested')
       this._playVideoContent()
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, () => {
-      console.log('AdEvent.CONTENT_PAUSE_REQUESTED')
+      this._imaEvent('content_pause_requested')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, () => {
-      console.log('AdEvent.LOADED')
+      this._imaEvent('loaded')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CLICK, () => {
-      console.log('AdEvent.CLICK')
+      this._imaEvent('click')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.IMPRESSION, () => {
-      console.log('AdEvent.IMPRESSION')
+      this._imaEvent('impression')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, () => {
-      console.log('AdEvent.STARTED')
+      this._imaEvent('started')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.FIRST_QUARTILE, () => {
-      console.log('AdEvent.FIRST_QUARTILE')
+      this._imaEvent('first_quartile')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.MIDPOINT, () => {
-      console.log('AdEvent.MIDPOINT')
+      this._imaEvent('midpoint')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.THIRD_QUARTILE, () => {
-      console.log('AdEvent.THIRD_QUARTILE')
+      this._imaEvent('third_quartile')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, () => {
-      console.log('AdEvent.COMPLETE')
+      this._imaEvent('complete')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.PAUSED, () => {
-      console.log('AdEvent.PAUSED')
+      this._imaEvent('paused')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.RESUMED, () => {
-      console.log('AdEvent.RESUMED')
+      this._imaEvent('resumed')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.SKIPPED, () => {
-      console.log('AdEvent.SKIPPED')
+      this._imaEvent('skipped')
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.USER_CLOSE, () => {
-      console.log('AdEvent.USER_CLOSE')
+      this._imaEvent('user_close')
     })
 
     this._setupOverlay()
@@ -275,8 +280,13 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   _onAdError(adErrorEvent) {
     // google.ima.AdErrorEvent : https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdErrorEvent
     // google.ima.AdError : https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdError
-    console.log('onAdError: ' + adErrorEvent.getError())
+    // console.log('onAdError: ' + adErrorEvent.getError())
+    this._imaEvent('ad_error', adErrorEvent)
     this._playVideoContent()
+  }
+
+  _imaEvent(eventName, e) {
+    $.isFunction(this._events[eventName]) && this._events[eventName](e)
   }
 
   _setupOverlay() {
@@ -311,7 +321,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       this._adsManager.init(this._contentElement.offsetWidth, this._contentElement.offsetHeight, google.ima.ViewMode.NORMAL)
       this._adsManager.start()
     } catch (e) {
-      console.log('adsManager catched error', e)
+      // console.log('adsManager catched error', e)
+      this._imaEvent('error', e)
       this._playVideoContent()
     }
   }
