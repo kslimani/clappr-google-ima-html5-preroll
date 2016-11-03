@@ -1,5 +1,5 @@
-import {UICorePlugin, Events, Browser, $} from 'clappr'
-import './style.sass'
+import {UICorePlugin, Events, Browser, Styler, $} from 'clappr'
+import pluginStyle from './style.sass'
 import blackSvgPixel from './black-svg-pixel'
 import dummyMp4Video from './dummy-mp4-video'
 import imaLoader from './ima-loader'
@@ -364,6 +364,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._$clickOverlay.find('svg').addClass('preroll-overlay-icon').attr('data-preroll', '')
     this.$el.append(this._$adContainer)
     this.$el.append(this._$clickOverlay)
+    this.$el.append(Styler.getStyleFor(pluginStyle))
     this._adContainer = this._$adContainer[0]
     this._clickOverlay = this._$clickOverlay[0]
 
