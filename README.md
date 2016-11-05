@@ -26,6 +26,7 @@ Then just add `ClapprGoogleImaHtml5PrerollPlugin` into the list of plugins of yo
 ```javascript
 var player = new Clappr.Player({
   source: "http://your.video/here.mp4",
+  autoPlay: false, // Mandatory player option
   plugins: {
     core: [ClapprGoogleImaHtml5PrerollPlugin],
   },
