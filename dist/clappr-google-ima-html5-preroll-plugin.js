@@ -127,6 +127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var _this = _possibleConstructorReturn(this, (ClapprGoogleImaHtml5PrerollPlugin.__proto__ || Object.getPrototypeOf(ClapprGoogleImaHtml5PrerollPlugin)).call(this, core));
 
 	    _this._imaIsloaded = false;
+	    _this._imaLoadResult = false;
 	    _this._pluginIsReady = false;
 
 	    var cfg = _this.options.googleImaHtml5PrerollPlugin;
@@ -137,6 +138,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _this._tag = cfg.tag;
 	    _this._autostart = cfg.autostart === false ? false : true; // Default is true
 	    _this._events = _clappr.$.isPlainObject(cfg.events) ? cfg.events : {};
+	    var timeout = cfg.imaLoadTimeout > 0 ? cfg.imaLoadTimeout : 6000; // Default is 6 seconds
 
 	    // TODO: Add an option which is an array of plugin name to disable
 
@@ -145,10 +147,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    // Ensure Google IMA SDK is loaded
-	    (0, _imaLoader2.default)(function () {
+	    (0, _imaLoader2.default)(function (result) {
+	      _this._imaLoadResult = result;
 	      _this._imaIsloaded = true;
 	      _this._initImaSDK();
-	    }, true);
+	    }, true, timeout);
 	    return _this;
 	  }
 
@@ -293,6 +296,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: '_initImaSDK',
 	    value: function _initImaSDK() {
 	      if (!this._imaIsloaded || !this._pluginIsReady) {
+	        return;
+	      }
+
+	      // Skip ad scenario if IMA SDK is not successfully loaded
+	      // May happen if user has ad blocker, or Google server unavailable
+	      if (!this._imaLoadResult) {
+	        this._playVideoContent();
+
 	        return;
 	      }
 
@@ -836,25 +847,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
-	exports.default = function (cb, secure) {
+	exports.default = function (cb, secure, timeout) {
 	  var win = window,
 	      doc = document,
 	      el = 'script';
 
+	  var onLoad = function onLoad(r) {
+	    win.clearTimeout(timer);
+	    if (typeof cb === 'function') cb(r);
+	  };
+
 	  if (win.google && win.google.ima) {
-	    if (typeof cb === 'function') cb();
+	    onLoad(true);
 
 	    return;
 	  }
 
+	  var timer = null;
 	  var s = secure === true ? 'https:' : '';
 	  var first = doc.getElementsByTagName(el)[0];
 	  var script = doc.createElement(el);
 
 	  script.src = s + '//imasdk.googleapis.com/js/sdkloader/ima3.js';
 	  script.async = true;
-	  if (typeof cb === 'function') script.onload = cb;
+	  if (typeof cb === 'function') script.onload = function () {
+	    onLoad(true);
+	  };
 	  first.parentNode.insertBefore(script, first);
+	  if (timeout) {
+	    timer = win.setTimeout(function () {
+	      onLoad(false);
+	    }, timeout);
+	  }
 	};
 
 	module.exports = exports['default']; /**
@@ -862,6 +886,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                                      * @function
 	                                      * @param {function} The library loaded callback.
 	                                      * @param {boolean} Set to true to force HTTPS load protocol. (Default behaviour is to match current protocol)
+	                                      * @param {number} The load timeout in milliseconds
 	                                      */
 
 /***/ },
