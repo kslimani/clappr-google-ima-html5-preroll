@@ -34,6 +34,7 @@ var player = new Clappr.Player({
     tag: 'VAST_TAG_URL',
     // autostart: false, // Default is true
     // events: { /* Event map */ },
+    // imaLoadTimeout: 3000, // Default is 6000 milliseconds
   }
 });
 ```

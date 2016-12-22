@@ -30,6 +30,7 @@
         googleImaHtml5PrerollPlugin: {
           tag: vastTag,
           // autostart: false,
+          imaLoadTimeout: 3000, // Default is 6000 milliseconds
           events: {
             content_resume_requested: function() { console.log('content_resume_requested') },
             content_pause_requested: function() { console.log('content_pause_requested') },

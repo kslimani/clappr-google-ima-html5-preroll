@@ -20,6 +20,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     super(core)
 
     this._imaIsloaded = false
+    this._imaLoadResult = false
     this._pluginIsReady = false
 
     let cfg = this.options.googleImaHtml5PrerollPlugin
@@ -30,6 +31,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._tag = cfg.tag
     this._autostart = cfg.autostart === false ? false : true // Default is true
     this._events = $.isPlainObject(cfg.events) ? cfg.events : {}
+    let timeout = cfg.imaLoadTimeout > 0 ? cfg.imaLoadTimeout : 6000 // Default is 6 seconds
 
     // TODO: Add an option which is an array of plugin name to disable
 
@@ -38,10 +40,11 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     }
 
     // Ensure Google IMA SDK is loaded
-    imaLoader(() => {
+    imaLoader((result) => {
+      this._imaLoadResult = result
       this._imaIsloaded = true
       this._initImaSDK()
-    }, true)
+    }, true, timeout)
   }
 
   bindEvents() {
@@ -169,6 +172,14 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
   _initImaSDK() {
     if (!this._imaIsloaded || !this._pluginIsReady) {
+      return
+    }
+
+    // Skip ad scenario if IMA SDK is not successfully loaded
+    // May happen if user has ad blocker, or Google server unavailable
+    if (!this._imaLoadResult) {
+      this._playVideoContent()
+
       return
     }
 
