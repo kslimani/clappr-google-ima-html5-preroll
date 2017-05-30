@@ -16,7 +16,7 @@ Add both Clappr and the plugin scripts to your HTML:
 
 ```html
 <head>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clappr/0.2.63/clappr.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clappr/0.2.66/clappr.min.js"></script>
   <script type="text/javascript" src="dist/clappr-google-ima-html5-preroll-plugin.js"></script> // yes, that's a long name ;-)
 </head>
 ```
@@ -73,23 +73,11 @@ For more details, see [Google IMA events types](https://developers.google.com/in
 Install dependencies :
 
 ```shell
-  npm install
+  yarn install
 ```
 
-Dist build :
+Start HTTP dev server (http://0.0.0.0:8080) :
 
 ```shell
-  npm run dist
-```
-
-Watch mode :
-
-```shell
-  npm run watch
-```
-
-Start HTTP server (http://0.0.0.0:8080/demo/) :
-
-```shell
-  npm run demo
+  yarn run start
 ```
