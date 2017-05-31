@@ -1,58 +1,73 @@
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- <script type="text/javascript" src="http://cdn.clappr.io/latest/clappr.js"></script> -->
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clappr/0.2.66/clappr.min.js"></script>
-  <script type="text/javascript" src="clappr-google-ima-html5-preroll-plugin.js"></script>
-</head>
-<body>
-  <div id="player"></div>
-  <script>
-    (function () {
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=655, user-scalable=yes" />
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clappr/0.2.66/clappr.min.js"></script>
+    <script type="text/javascript" src="clappr-google-ima-html5-preroll-plugin.js"></script>
+    <style>
+      .player {
+        width: 640px;
+        height: 360px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="player"></div>
+    <script>
+      (function () {
+        // Clappr.Log.setLevel(0)
 
-      // Clappr.Log.setLevel(0)
-      var videoUrl = 'https://static.playmedia-cdn.net/resources/sample/h264_sintel_trailer-1080p.mp4'
-      // var videoUrl = 'http://www.streambox.fr/playlists/x36xhzz/x36xhzz.m3u8'
+        // Sintel trailer - (c) copyright Blender Foundation - www.sintel.org
+        var videoUrl = 'https://static.playmedia-cdn.net/resources/sample/h264_sintel_trailer-1080p.mp4'
 
-      // Single Inline Linear. See https://developers.google.com/interactive-media-ads/docs/sdks/html5/tags
-      var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator='
+        // Big Buck Bunny - (c) copyright 2008, Blender Foundation - www.bigbuckbunny.org
+        // var videoUrl = 'http://www.streambox.fr/playlists/x36xhzz/x36xhzz.m3u8'
 
-      var player = new Clappr.Player({
-        parentId: "#player",
-        source: videoUrl,
-        disableKeyboardShortcuts: true,
-        disableVideoTagContextMenu: true,
-        autoSeekFromUrl: false,
-        autoPlay: false,
-        // width: 640,
-        // height: 360,
-        plugins: {
-          core: [ClapprGoogleImaHtml5PrerollPlugin],
-        },
-        googleImaHtml5PrerollPlugin: {
-          tag: vastTag,
-          // autostart: false,
-          imaLoadTimeout: 3000, // Default is 6000 milliseconds
-          events: {
-            content_resume_requested: function() { console.log('content_resume_requested') },
-            content_pause_requested: function() { console.log('content_pause_requested') },
-            loaded: function() { console.log('loaded') },
-            click: function() { console.log('click') },
-            impression: function() { console.log('impression') },
-            started: function() { console.log('started') },
-            first_quartile: function() { console.log('first_quartile') },
-            midpoint: function() { console.log('midpoint') },
-            third_quartile: function() { console.log('third_quartile') },
-            complete: function() { console.log('complete') },
-            paused: function() { console.log('paused') },
-            resumed: function() { console.log('resumed') },
-            skipped: function() { console.log('skipped') },
-            user_close: function() { console.log('user_close') },
-            ad_error: function(e) { console.log('ad_error: ' + e.getError()) },
-            error: function(e) { console.log('error', e) },
-          }
-        },
-      })
+        // Single Inline Linear. See https://developers.google.com/interactive-media-ads/docs/sdks/html5/tags
+        var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator='
 
-    })()
-  </script>
-</body>
+        var player = new Clappr.Player({
+          parentId: ".player",
+          source: videoUrl,
+          disableKeyboardShortcuts: true,
+          disableVideoTagContextMenu: true,
+          autoSeekFromUrl: false,
+          width: '100%',
+          height: '100%',
+          autoPlay: false,
+          playback: {
+            playInline: true,
+          },
+          plugins: {
+            core: [ClapprGoogleImaHtml5PrerollPlugin],
+          },
+          googleImaHtml5PrerollPlugin: {
+            tag: vastTag,
+            // autostart: false,
+            imaLoadTimeout: 3000, // Default is 6000 milliseconds
+            events: {
+              content_resume_requested: function() { console.log('content_resume_requested') },
+              content_pause_requested: function() { console.log('content_pause_requested') },
+              loaded: function() { console.log('loaded') },
+              click: function() { console.log('click') },
+              impression: function() { console.log('impression') },
+              started: function() { console.log('started') },
+              first_quartile: function() { console.log('first_quartile') },
+              midpoint: function() { console.log('midpoint') },
+              third_quartile: function() { console.log('third_quartile') },
+              complete: function() { console.log('complete') },
+              paused: function() { console.log('paused') },
+              resumed: function() { console.log('resumed') },
+              skipped: function() { console.log('skipped') },
+              user_close: function() { console.log('user_close') },
+              ad_error: function(e) { console.log('ad_error: ' + e.getError()) },
+              error: function(e) { console.log('error', e) },
+            }
+          },
+        })
+
+      })()
+    </script>
+  </body>
+</html>
