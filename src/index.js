@@ -1,7 +1,6 @@
 import {UICorePlugin, Events, Browser, Styler, $} from 'clappr'
 import pluginStyle from './style.sass'
-import blackSvgPixel from './black-svg-pixel'
-import dummyMp4Video from './dummy-mp4-video'
+import {svg, mp4} from './dummy'
 import imaLoader from './ima-loader'
 import playSvg from './play.svg'   // 01-play.svg icon from Clappr player
 import loadSvg from './loader.svg' // http://articles.dappergentlemen.com/2015/01/13/svg-spinner/
@@ -133,11 +132,11 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     if (!src || src.length === 0) {
       // Ensure video element has one source loaded (expected by most of ad SDK libraries)
       // This is required if loaded source is a .m3u8 handled by hls.js playback (src is empty)
-      this._playback.el.src = dummyMp4Video
+      this._playback.el.src = mp4
       this._useDummyMp4Video = true
     } else if (this._playback.name === 'html5_video' && !this._playback.el.hasAttribute('poster'))  {
       // Hide video source preview using a black 1 pixel video poster. (Smoother user experience on iOS/MacOSX)
-      this._playback.el.poster = 'data:image/svg+xml,' + blackSvgPixel
+      this._playback.el.poster = svg
       this._useBlackSvgPixel = true
     }
 
