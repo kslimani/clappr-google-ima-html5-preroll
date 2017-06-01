@@ -4,9 +4,9 @@
 
 This is a simple proof of concept based on [Clappr ad skeleton plugin](https://github.com/kslimani/clappr-html5-preroll-skeleton-plugin) example.
 
-It should be supported by Clappr `0.2.x` branch version.
+This plugin is supported __ONLY__ by Clappr version `0.2.66` or greater. (_For older Clappr versions, use the `0.0.7` version of the plugin_).
 
-It support ONLY [Clappr playbacks](https://github.com/clappr/clappr/tree/master/src/playbacks) which use an HTML5 video element. ('hls', 'html5_video', etc...). Flash playbacks are not supported.
+On mobile devices, it support only [Clappr playbacks](https://github.com/clappr/clappr/tree/master/src/playbacks) which use an HTML5 video element.
 
 See also [demo page](https://kslimani.github.io/clappr-google-ima-html5-preroll/) hosted on Github.
 
