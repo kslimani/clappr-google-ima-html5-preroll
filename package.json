@@ -1,6 +1,6 @@
 {
   "name": "clappr-google-ima-html5-preroll-plugin",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "Google IMA HTML5 preroll ad plugin for Clappr player.",
   "main": "dist/clappr-google-ima-html5-preroll-plugin.js",
   "scripts": {

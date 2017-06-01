@@ -496,17 +496,11 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
         this._pluginError('failed to get Clappr playback');
       }
 
-      // Get poster plugin. (May interfere with media control)
-      this._posterPlugin = this._container.getPlugin('poster');
-      if (!this._posterPlugin) {
-        this._pluginError('failed to get Clappr internal poster plugin');
-      }
+      // Attempt to get poster plugin. (May interfere with media control)
+      this._posterPlugin = this._container.getPlugin('poster'
 
-      // Get click-to-pause plugin. (May interfere with advert click handling)
-      this._clickToPausePlugin = this._container.getPlugin('click_to_pause');
-      if (!this._clickToPausePlugin) {
-        this._pluginError('failed to get Clappr internal click-to-pause plugin');
-      }
+      // Attempt to get click-to-pause plugin. (May interfere with advert click handling)
+      );this._clickToPausePlugin = this._container.getPlugin('click_to_pause');
 
       this._contentElement = this._playback.el;
       this._initPlugin();
@@ -515,19 +509,16 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
     key: '_disableControls',
     value: function _disableControls() {
       this.core.disableMediaControl();
-      this._posterPlugin.disable();
-      this._clickToPausePlugin.disable();
-      // this._container.stopped() // Little trick to avoid spinner plugin display
+      this._posterPlugin && this._posterPlugin.disable();
+      this._clickToPausePlugin && this._clickToPausePlugin.disable();
       this._container.stopListening();
     }
   }, {
     key: '_enableControls',
     value: function _enableControls() {
-      this._container.bindEvents();
-      this._clickToPausePlugin.enable();
-      this._posterPlugin.enable();
+      this._clickToPausePlugin && this._clickToPausePlugin.enable();
+      this._posterPlugin && this._posterPlugin.enable();
       this.core.enableMediaControl();
-      this.core.mediaControl.onLoadedMetadataOnVideoTag(); // Little trick to fix iOS fullscreen button display
     }
   }, {
     key: '_initPlugin',
@@ -541,18 +532,18 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
         return;
       }
 
-      // Ensure playback is using HTML5 video element (other playback not supported)
-      if (this._playback.tagName !== 'video') {
+      // Ensure playback is using HTML5 video element if mobile device
+      if (this._playback.tagName !== 'video' && _clappr.Browser.isMobile) {
         this.destroy();
 
         return;
       }
 
       // Display overlay (with loader icon)
-      this._$clickOverlay.show();
+      this._$clickOverlay.show
 
       // Disable Clappr during ad playback
-      process.nextTick(function () {
+      ();process.nextTick(function () {
         return _this2._disableControls();
       });
 
@@ -580,10 +571,10 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
   }, {
     key: '_createImaContainer',
     value: function _createImaContainer() {
-      this._destroyImaContainer();
+      this._destroyImaContainer
       // IMA does not clean ad container when finished
       // For the sake of simplicity, wrap into a <div> element
-      if (this._adContainer) {
+      ();if (this._adContainer) {
         this._imaContainer = document.createElement('div');
         this._adContainer.appendChild(this._imaContainer);
       }
@@ -652,9 +643,8 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
 
       var adsRenderingSettings = new google.ima.AdsRenderingSettings();
 
-      // This could also set to false and ensure playback state is restored
-      // Note also that Clappr destroy video src on stop and set src value on play
-      adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
+      // Plugin will handle playback state when ad has completed
+      adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
 
       this._adsManager = adsManagerLoadedEvent.getAdsManager(this._contentElement, adsRenderingSettings);
 
@@ -749,9 +739,12 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
             e.preventDefault();
             e.stopPropagation();
           } catch (err) {}
-          _this5._$clickOverlay.hide();
+          _this5._$clickOverlay.hide
+          // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
+          ();_this5._playback.consent();
           _this5._playAds();
         };
+
         this._setPlayIcon();
         this._clickOverlay.addEventListener('click', startAd, false);
 
@@ -765,7 +758,6 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
   }, {
     key: '_playAds',
     value: function _playAds() {
-      this._contentElement.load();
       this._adDisplayContainer.initialize();
 
       try {
@@ -782,22 +774,19 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
     value: function _playVideoContent() {
       var _this6 = this;
 
-      if (this._useBlackSvgPixel) {
-        this._playback.$el.attr('poster', null);
-      }
-
-      if (this._useDummyMp4Video) {
-        // Clappr HTML5 video playback stop() method remove the src element.
-        this.core.mediaControl.stop();
-      } else {
-        // Trick to fix 'seek_time' plugin. https://github.com/kslimani/clappr-google-ima-html5-preroll/issues/1
-        this._contentElement.load();
-      }
-
       process.nextTick(function () {
         _this6._enableControls();
-        _this6.$el.hide();
-        _this6.core.mediaControl.play();
+        _this6.$el.hide
+
+        // Ensure recycleVideo playback option is enabled with mobile devices (Clappr 0.2.66 or greater)
+        ();var playbackOptions = _this6.core.options.playback || {};
+        playbackOptions.recycleVideo = _clappr.Browser.isMobile;
+
+        _this6.core.configure({
+          playback: playbackOptions,
+          sources: _this6.core.options.sources,
+          autoPlay: true
+        });
       });
     }
   }, {
