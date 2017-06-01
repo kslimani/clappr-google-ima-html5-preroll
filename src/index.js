@@ -72,17 +72,11 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       this._pluginError('failed to get Clappr playback')
     }
 
-    // Get poster plugin. (May interfere with media control)
+    // Attempt to get poster plugin. (May interfere with media control)
     this._posterPlugin = this._container.getPlugin('poster')
-    if (!this._posterPlugin) {
-      this._pluginError('failed to get Clappr internal poster plugin')
-    }
 
-    // Get click-to-pause plugin. (May interfere with advert click handling)
+    // Attempt to get click-to-pause plugin. (May interfere with advert click handling)
     this._clickToPausePlugin = this._container.getPlugin('click_to_pause')
-    if (!this._clickToPausePlugin) {
-      this._pluginError('failed to get Clappr internal click-to-pause plugin')
-    }
 
     this._contentElement = this._playback.el
     this._initPlugin()
@@ -90,18 +84,15 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
   _disableControls() {
     this.core.disableMediaControl()
-    this._posterPlugin.disable()
-    this._clickToPausePlugin.disable()
-    // this._container.stopped() // Little trick to avoid spinner plugin display
+    this._posterPlugin && this._posterPlugin.disable()
+    this._clickToPausePlugin && this._clickToPausePlugin.disable()
     this._container.stopListening()
   }
 
   _enableControls() {
-    this._container.bindEvents()
-    this._clickToPausePlugin.enable()
-    this._posterPlugin.enable()
+    this._clickToPausePlugin && this._clickToPausePlugin.enable()
+    this._posterPlugin && this._posterPlugin.enable()
     this.core.enableMediaControl()
-    this.core.mediaControl.onLoadedMetadataOnVideoTag(); // Little trick to fix iOS fullscreen button display
   }
 
   _initPlugin() {
@@ -112,8 +103,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       return
     }
 
-    // Ensure playback is using HTML5 video element (other playback not supported)
-    if (this._playback.tagName !== 'video') {
+    // Ensure playback is using HTML5 video element if mobile device
+    if (this._playback.tagName !== 'video' && Browser.isMobile) {
       this.destroy()
 
       return
@@ -217,9 +208,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   _onAdsManagerLoaded(adsManagerLoadedEvent) {
     let adsRenderingSettings = new google.ima.AdsRenderingSettings()
 
-    // This could also set to false and ensure playback state is restored
-    // Note also that Clappr destroy video src on stop and set src value on play
-    adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true
+    // Plugin will handle playback state when ad has completed
+    adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = false
 
     this._adsManager = adsManagerLoadedEvent.getAdsManager(this._contentElement, adsRenderingSettings)
 
@@ -310,8 +300,11 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
           e.stopPropagation()
         } catch (err) {}
         this._$clickOverlay.hide()
+        // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
+        this._playback.consent()
         this._playAds()
       }
+
       this._setPlayIcon()
       this._clickOverlay.addEventListener('click', startAd, false)
 
@@ -324,7 +317,6 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   }
 
   _playAds() {
-    this._contentElement.load()
     this._adDisplayContainer.initialize()
 
     try {
@@ -338,22 +330,19 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   }
 
   _playVideoContent() {
-    if (this._useBlackSvgPixel) {
-      this._playback.$el.attr('poster', null)
-    }
-
-    if (this._useDummyMp4Video) {
-      // Clappr HTML5 video playback stop() method remove the src element.
-      this.core.mediaControl.stop()
-    } else {
-      // Trick to fix 'seek_time' plugin. https://github.com/kslimani/clappr-google-ima-html5-preroll/issues/1
-      this._contentElement.load()
-    }
-
     process.nextTick(() => {
       this._enableControls()
       this.$el.hide()
-      this.core.mediaControl.play()
+
+      // Ensure recycleVideo playback option is enabled with mobile devices (Clappr 0.2.66 or greater)
+      let playbackOptions = this.core.options.playback || {}
+      playbackOptions.recycleVideo = Browser.isMobile
+
+      this.core.configure({
+        playback: playbackOptions,
+        sources: this.core.options.sources,
+        autoPlay: true,
+      })
     })
   }
 
