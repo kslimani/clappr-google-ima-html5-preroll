@@ -41,6 +41,8 @@ var player = new Clappr.Player({
 });
 ```
 
+For more details about VPAID modes, see [Google IMA VPAID 2 support](https://developers.google.com/interactive-media-ads/docs/sdks/html5/vpaid2js#enabling).
+
 ## Events
 
 For more details, see [Google IMA events types](https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#values_3).
