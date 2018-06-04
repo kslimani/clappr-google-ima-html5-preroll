@@ -1,8 +1,8 @@
 # Google IMA HTML5 preroll ad plugin for Clappr player
 
-[Google IMA HTML5 SDK (v3)](https://developers.google.com/interactive-media-ads/docs/sdks/html5/quickstart) __preroll only__ ad plugin for [Clappr](https://github.com/clappr/clappr) video player.
+[Google IMA HTML5 SDK (v3)](https://developers.google.com/interactive-media-ads/docs/sdks/html5/quickstart) __PREROLL ONLY__ ad plugin for [Clappr](https://github.com/clappr/clappr) video player.
 
-This is a simple proof of concept based on [Clappr ad skeleton plugin](https://github.com/kslimani/clappr-html5-preroll-skeleton-plugin) example.
+This is a simple __proof of concept__ based on [Clappr ad skeleton plugin](https://github.com/kslimani/clappr-html5-preroll-skeleton-plugin) example.
 
 This plugin is supported __ONLY__ by Clappr version `0.2.66` or greater. (_For older Clappr versions, use the `0.0.7` version of the plugin_).
 
@@ -16,7 +16,7 @@ Add both Clappr and the plugin scripts to your HTML:
 
 ```html
 <head>
-  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clappr/0.2.66/clappr.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
   <script type="text/javascript" src="dist/clappr-google-ima-html5-preroll-plugin.js"></script> // yes, that's a long name ;-)
 </head>
 ```
@@ -32,9 +32,11 @@ var player = new Clappr.Player({
   },
   googleImaHtml5PrerollPlugin: {
     tag: 'VAST_TAG_URL',
+    vpaid: 1, // Default is 0 (0 is DISABLED, 1 is ENABLED and 2 is INSECURE)
     // autostart: false, // Default is true
     // events: { /* Event map */ },
     // imaLoadTimeout: 3000, // Default is 6000 milliseconds
+    // nonLinearDuration: 10000, // Default is 5000 milliseconds
   }
 });
 ```
