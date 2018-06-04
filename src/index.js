@@ -1,4 +1,4 @@
-import {UICorePlugin, Events, Browser, Styler, $} from 'clappr'
+import {UICorePlugin, Mediator, Events, Browser, Styler, $} from 'clappr'
 import pluginStyle from './style.sass'
 import {svg, mp4} from './dummy'
 import imaLoader from './ima-loader'
@@ -30,6 +30,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._tag = cfg.tag
     this._autostart = cfg.autostart === false ? false : true // Default is true
     this._events = $.isPlainObject(cfg.events) ? cfg.events : {}
+    this._vpaid = cfg.hasOwnProperty('vpaid') ? cfg.vpaid : 0 // Default VpaidMode is DISABLED
+    this._nonLinearDuration = cfg.nonLinearDuration > 0 ? cfg.nonLinearDuration : 5000 // Default is 5 seconds
     let timeout = cfg.imaLoadTimeout > 0 ? cfg.imaLoadTimeout : 6000 // Default is 6 seconds
 
     // TODO: Add an option which is an array of plugin name to disable
@@ -46,9 +48,20 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     }, true, timeout)
   }
 
+  _vpaidMode() {
+    if (this._vpaid === 0)
+      return google.ima.ImaSdkSettings.VpaidMode.DISABLED
+
+    if (this._vpaid > 1)
+      return google.ima.ImaSdkSettings.VpaidMode.INSECURE
+
+    return google.ima.ImaSdkSettings.VpaidMode.ENABLED
+  }
+
   bindEvents() {
     this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_CONTAINERCHANGED, this._onMediaControlContainerChanged)
     this.listenTo(this.core, Events.CORE_READY, this._onCoreReady)
+    Mediator.on(`${this.core.options.playerId}:${Events.PLAYER_RESIZE}`, this._onPlayerResize, this)
   }
 
   _onMediaControlContainerChanged() {
@@ -79,7 +92,16 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._clickToPausePlugin = this._container.getPlugin('click_to_pause')
 
     this._contentElement = this._playback.el
+
+    // Since Clappr 0.2.84, CORE_READY event is trigerred after create container on load
+    if (this._pluginIsReady) return
+
     this._initPlugin()
+  }
+
+  _onPlayerResize(evt) {
+    // Signal player resize to ads manager
+    this._adsManager && this._adsManager.resize(this._contentElement.offsetWidth, this._contentElement.offsetHeight, google.ima.ViewMode.NORMAL)
   }
 
   _disableControls() {
@@ -143,7 +165,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     // IMA does not clean ad container when finished
     // For the sake of simplicity, wrap into a <div> element
     if (this._adContainer) {
-      this._imaContainer = document.createElement('div')
+      this._imaContainer = $("<div />").addClass("ima-container").attr('data-preroll', '')[0]
       this._adContainer.appendChild(this._imaContainer)
     }
   }
@@ -172,6 +194,9 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
       return
     }
+
+    // Setup VPAID support
+    google.ima.settings.setVpaidMode(this._vpaidMode());
 
     this._createAdDisplayContainer()
     this._requestAd()
@@ -238,7 +263,15 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       this._imaEvent('impression')
     })
 
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, () => {
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, (e) => {
+      // Non-linear ad is displayed before content for duration
+      // FIXME: find a way to display it while playing content
+      if (! e.getAd().isLinear()) {
+        setTimeout(() => {
+          this._playVideoContent()
+        }, this._nonLinearDuration)
+      }
+
       this._imaEvent('started')
     })
 
@@ -338,11 +371,13 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       let playbackOptions = this.core.options.playback || {}
       playbackOptions.recycleVideo = Browser.isMobile
 
-      this.core.configure({
-        playback: playbackOptions,
-        sources: this.core.options.sources,
-        autoPlay: true,
-      })
+      setTimeout(() => {
+        this.core.configure({
+          playback: playbackOptions,
+          sources: this.core.options.sources,
+          autoPlay: true,
+        })
+      }, 100)
     })
   }
 
