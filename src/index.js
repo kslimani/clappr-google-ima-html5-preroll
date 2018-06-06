@@ -15,47 +15,18 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     }
   }
 
+  get cfg() {
+    return this.options.googleImaHtml5PrerollPlugin || {}
+  }
+
   constructor(core) {
     super(core)
-
+    this._imaIsloading = false
     this._imaIsloaded = false
     this._imaLoadResult = false
     this._pluginIsReady = false
-
-    let cfg = this.options.googleImaHtml5PrerollPlugin
-    if (!cfg) {
-      this._pluginError('configuration is missing')
-    }
-
-    this._tag = cfg.tag
-    this._autostart = cfg.autostart === false ? false : true // Default is true
-    this._events = $.isPlainObject(cfg.events) ? cfg.events : {}
-    this._vpaid = cfg.hasOwnProperty('vpaid') ? cfg.vpaid : 0 // Default VpaidMode is DISABLED
-    this._nonLinearDuration = cfg.nonLinearDuration > 0 ? cfg.nonLinearDuration : 5000 // Default is 5 seconds
-    let timeout = cfg.imaLoadTimeout > 0 ? cfg.imaLoadTimeout : 6000 // Default is 6 seconds
-
-    // TODO: Add an option which is an array of plugin name to disable
-
-    if (!this._tag) {
-      this._pluginError('tag option is required')
-    }
-
-    // Ensure Google IMA SDK is loaded
-    imaLoader((result) => {
-      this._imaLoadResult = result
-      this._imaIsloaded = true
-      this._initImaSDK()
-    }, true, timeout)
-  }
-
-  _vpaidMode() {
-    if (this._vpaid === 0)
-      return google.ima.ImaSdkSettings.VpaidMode.DISABLED
-
-    if (this._vpaid > 1)
-      return google.ima.ImaSdkSettings.VpaidMode.INSECURE
-
-    return google.ima.ImaSdkSettings.VpaidMode.ENABLED
+    this._controlsDisabled = false
+    this._isLoadingContent = false
   }
 
   bindEvents() {
@@ -68,34 +39,10 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this.core.mediaControl.container.$el.append(this.el)
   }
 
-  _pluginError(msg) {
-    throw new Error(this.name + ': ' + msg)
-  }
-
   _onCoreReady() {
-    // Get current container. (To disable bindings during ad playback)
-    this._container = this.core.getCurrentContainer()
-    if (!this._container) {
-      this._pluginError('failed to get Clappr current container')
-    }
-
-    // Get current playback. (To get playback element)
-    this._playback = this.core.getCurrentPlayback()
-    if (!this._playback) {
-      this._pluginError('failed to get Clappr playback')
-    }
-
-    // Attempt to get poster plugin. (May interfere with media control)
-    this._posterPlugin = this._container.getPlugin('poster')
-
-    // Attempt to get click-to-pause plugin. (May interfere with advert click handling)
-    this._clickToPausePlugin = this._container.getPlugin('click_to_pause')
-
-    this._contentElement = this._playback.el
-
-    // Since Clappr 0.2.84, CORE_READY event is trigerred after create container on load
-    if (this._pluginIsReady) return
-
+    // Since Clappr 0.2.84, "CORE_READY" event is trigerred after create container on load
+    this._configure()
+    this._loadImaSDK()
     this._initPlugin()
   }
 
@@ -104,40 +51,103 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._adsManager && this._adsManager.resize(this._contentElement.offsetWidth, this._contentElement.offsetHeight, google.ima.ViewMode.NORMAL)
   }
 
+  _pluginError(msg) {
+    throw new Error(this.name + ': ' + msg)
+  }
+
+  _configure() {
+    this._tag = this.cfg.tag || false
+    this._autostart = this.cfg.autostart === false ? false : true // Default is true
+    this._events = $.isPlainObject(this.cfg.events) ? this.cfg.events : {}
+    this._vpaid = this.cfg.hasOwnProperty('vpaid') ? this.cfg.vpaid : 0 // Default VpaidMode is DISABLED
+    this._nonLinearDuration = this.cfg.nonLinearDuration > 0 ? this.cfg.nonLinearDuration : 15000 // Default is 15 seconds
+    this._imaLoadtimeout = this.cfg.imaLoadTimeout > 0 ? this.cfg.imaLoadTimeout : 6000 // Default is 6 seconds
+    // TODO: Add an option which is an array of plugin name to disable
+  }
+
+  _loadImaSDK() {
+    // Ensure is lazy loaded once (only if tag is filled)
+    if (this._imaIsloading || this._imaIsloaded || !this._tag) return
+
+    this._imaIsloading = true
+    imaLoader((result) => {
+      this._imaLoadResult = result
+      this._imaIsloading = false
+      this._imaIsloaded = true
+      this._initImaSDK()
+    }, true, this._imaLoadtimeout)
+  }
+
   _disableControls() {
     this.core.disableMediaControl()
     this._posterPlugin && this._posterPlugin.disable()
     this._clickToPausePlugin && this._clickToPausePlugin.disable()
     this._container.stopListening()
+    this._controlsDisabled = true
   }
 
   _enableControls() {
-    this._clickToPausePlugin && this._clickToPausePlugin.enable()
-    this._posterPlugin && this._posterPlugin.enable()
-    this.core.enableMediaControl()
+    if (this._controlsDisabled) {
+      this._clickToPausePlugin && this._clickToPausePlugin.enable()
+      this._posterPlugin && this._posterPlugin.enable()
+      this.core.enableMediaControl()
+      this._controlsDisabled = false
+    }
   }
 
   _initPlugin() {
-    // Ensure browser can play video content. (Avoid to display an ad with nothing after)
-    if (this._playback.name === 'no_op') {
-      this.destroy()
+    this._pluginIsReady = false
+
+    // Ensure not loading video content (after ad played)
+    if (this._isLoadingContent) {
+      this._isLoadingContent = false
+      this.$el.hide()
 
       return
     }
+
+    this._cleanup()
+
+    // Get current playback. (To get playback element)
+    this._playback = this.core.getCurrentPlayback()
+    if (!this._playback) {
+      this._pluginError('failed to get Clappr playback')
+    }
+
+    // Ensure plugin configuration has VAST tag
+    if (!this._tag) return
 
     // Ensure playback is using HTML5 video element if mobile device
-    if (this._playback.tagName !== 'video' && Browser.isMobile) {
-      this.destroy()
+    if (this._playback.tagName !== 'video' && Browser.isMobile) return
 
-      return
+    // Ensure browser can play video content. (Avoid to display an ad with nothing after)
+    if (this._playback.name === 'no_op') return
+
+    this.$el.show()
+    this._$clickOverlay.show()
+
+    // Get current container. (To disable bindings during ad playback)
+    this._container = this.core.getCurrentContainer()
+    if (!this._container) {
+      this._pluginError('failed to get Clappr current container')
     }
 
-    // Display overlay (with loader icon)
-    this._$clickOverlay.show()
+    // Attempt to get poster plugin. (May interfere with media control)
+    this._posterPlugin = this._container.getPlugin('poster')
+
+    // Attempt to get click-to-pause plugin. (May interfere with advert click handling)
+    this._clickToPausePlugin = this._container.getPlugin('click_to_pause')
 
     // Disable Clappr during ad playback
     process.nextTick(() => this._disableControls())
 
+    // Attempt to get error screen plugin. (May interfere with dummy source switch)
+    this._errorScreenPlugin = this.core.getPlugin('error_screen')
+
+    // Disable error screen plugin (will be re-enabled when source reloaded)
+    this._errorScreenPlugin && this._errorScreenPlugin.disable()
+
+    this._contentElement = this._playback.el
     this._useDummyMp4Video = false
     this._useBlackSvgPixel = false
 
@@ -179,7 +189,26 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
   _createAdDisplayContainer() {
     this._createImaContainer()
+    this._destroyAdDisplayContainer()
     this._adDisplayContainer = new google.ima.AdDisplayContainer(this._imaContainer, this._contentElement)
+  }
+
+  _destroyAdDisplayContainer() {
+    if (this._adDisplayContainer) {
+      this._adDisplayContainer.destroy()
+      delete this._adDisplayContainer
+    }
+  }
+
+  _vpaidMode() {
+    // For more details, read https://developers.google.com/interactive-media-ads/docs/sdks/html5/vpaid2js#enabling
+    if (this._vpaid === 0)
+      return google.ima.ImaSdkSettings.VpaidMode.DISABLED
+
+    if (this._vpaid > 1)
+      return google.ima.ImaSdkSettings.VpaidMode.INSECURE
+
+    return google.ima.ImaSdkSettings.VpaidMode.ENABLED
   }
 
   _initImaSDK() {
@@ -198,21 +227,34 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     // Setup VPAID support
     google.ima.settings.setVpaidMode(this._vpaidMode());
 
-    this._createAdDisplayContainer()
-    this._requestAd()
+    this._setupOverlay()
+  }
+
+  _destroyAdsLoader() {
+    if (this._adsLoader) {
+      this._adsLoader.contentComplete()
+      this._adsLoader.destroy()
+      delete this._adsLoader
+    }
   }
 
   _requestAd() {
-    let adsLoader = new google.ima.AdsLoader(this._adDisplayContainer)
+    // Destroy any previously created ads loader instance
+    // IMA guidelines are to use the same AdsLoader instance for the entire
+    // lifecycle of your page, but Clappr may create a new video element if
+    // configure() method is called with a source.
+    this._destroyAdsLoader()
 
-    adsLoader.addEventListener(
+    this._adsLoader = new google.ima.AdsLoader(this._adDisplayContainer)
+
+    this._adsLoader.addEventListener(
       google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
       (e) => {
         this._onAdsManagerLoaded(e)
       }
     )
 
-    adsLoader.addEventListener(
+    this._adsLoader.addEventListener(
       google.ima.AdErrorEvent.Type.AD_ERROR,
       (e) => {
         this._onAdError(e)
@@ -226,8 +268,19 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     adsRequest.nonLinearAdSlotWidth = this._contentElement.offsetWidth
     adsRequest.nonLinearAdSlotHeight = this._contentElement.offsetHeight
 
+    // Assume playback is consented by user
+    adsRequest.setAdWillAutoPlay(true);
+    adsRequest.setAdWillPlayMuted(false);
+
     // requestAds() trigger _onAdsManagerLoaded() or _onAdError()
-    adsLoader.requestAds(adsRequest)
+    this._adsLoader.requestAds(adsRequest)
+  }
+
+  _destroyAdsManager() {
+    if (this._adsManager) {
+      this._adsManager.destroy()
+      delete this._adsManager
+    }
   }
 
   _onAdsManagerLoaded(adsManagerLoadedEvent) {
@@ -235,6 +288,11 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
     // Plugin will handle playback state when ad has completed
     adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = false
+
+    // Destroy any previously created ads manager
+    this._destroyAdsManager()
+
+    this._adLoaded = false;
 
     this._adsManager = adsManagerLoadedEvent.getAdsManager(this._contentElement, adsRenderingSettings)
 
@@ -252,6 +310,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, () => {
+      this._adLoaded = true;
       this._imaEvent('loaded')
     })
 
@@ -307,7 +366,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       this._imaEvent('user_close')
     })
 
-    this._setupOverlay()
+    this._playAds()
   }
 
   _onAdError(adErrorEvent) {
@@ -315,7 +374,10 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     // google.ima.AdError : https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdError
     // console.log('onAdError: ' + adErrorEvent.getError())
     this._imaEvent('ad_error', adErrorEvent)
-    this._playVideoContent()
+
+    if (!this._adLoaded) {
+      this._playVideoContent()
+    }
   }
 
   _imaEvent(eventName, e) {
@@ -325,35 +387,46 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   _setupOverlay() {
     // Ad start must be done as the result of a user action on mobile.
     // For more details, read https://developers.google.com/interactive-media-ads/docs/sdks/html5/mobile_video
-    if (!this._autostart || Browser.isMobile) {
+    if (!this._autostart) {
       let startAd = (e) => {
         try {
           this._clickOverlay.removeEventListener('click', startAd, false)
           e.preventDefault()
           e.stopPropagation()
         } catch (err) {}
-        this._$clickOverlay.hide()
+
+        this._setOverlayIcon(loadSvg)
+
         // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
         this._playback.consent()
-        this._playAds()
+
+        // Request ad
+        this._createAdDisplayContainer()
+        this._adDisplayContainer.initialize() // Must be called on overlay click
+        this._requestAd()
       }
 
-      this._setPlayIcon()
+      this._setOverlayIcon(playSvg)
       this._clickOverlay.addEventListener('click', startAd, false)
 
       return
     }
 
-    // Otherwise, autostart ad display
-    this._$clickOverlay.hide()
-    this._playAds()
+    // Otherwise, request ad
+    this._setOverlayIcon(loadSvg)
+    this._createAdDisplayContainer()
+    this._adDisplayContainer.initialize()
+    this._requestAd()
   }
 
   _playAds() {
-    this._adDisplayContainer.initialize()
-
     try {
-      this._adsManager.init(this._contentElement.offsetWidth, this._contentElement.offsetHeight, google.ima.ViewMode.NORMAL)
+      this._$clickOverlay.hide()
+      this._adsManager.init(
+        this._contentElement.offsetWidth,
+        this._contentElement.offsetHeight,
+        google.ima.ViewMode.NORMAL
+      )
       this._adsManager.start()
     } catch (e) {
       // console.log('adsManager catched error', e)
@@ -371,11 +444,14 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       let playbackOptions = this.core.options.playback || {}
       playbackOptions.recycleVideo = Browser.isMobile
 
+      // Signal loading video content
+      this._isLoadingContent = true
+
       setTimeout(() => {
         this.core.configure({
           playback: playbackOptions,
           sources: this.core.options.sources,
-          autoPlay: true,
+          autoPlay: true, // Assume playback has user consent
         })
       }, 100)
     })
@@ -394,8 +470,6 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._remove()
     this._$adContainer = $("<div />").addClass("preroll-container").attr('data-preroll', '')
     this._$clickOverlay = $("<div />").addClass("preroll-overlay").attr('data-preroll', '')
-    this._$clickOverlay.append(loadSvg).find('svg path').css('fill', '#fff')
-    this._$clickOverlay.find('svg').addClass('preroll-overlay-icon').attr('data-preroll', '')
     this.$el.append(this._$adContainer)
     this.$el.append(this._$clickOverlay)
     this.$el.append(Styler.getStyleFor(pluginStyle))
@@ -405,17 +479,27 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     return this
   }
 
-  _setPlayIcon() {
-    this._$clickOverlay.find('svg').replaceWith(playSvg)
+  _setOverlayIcon(icon) {
+    let svg = this._$clickOverlay.find('svg')
+    if (svg[0]) {
+      this._$clickOverlay.find('svg').replaceWith(icon)
+    } else {
+      this._$clickOverlay.append(icon)
+    }
     this._$clickOverlay.find('svg path').css('fill', '#fff')
     this._$clickOverlay.find('svg').addClass('preroll-overlay-icon').attr('data-preroll', '')
   }
 
-  destroy() {
-    if (this._adsManager) {
-      this._adsManager.destroy()
-    }
+  _cleanup() {
+    this._destroyAdsLoader()
+    this._destroyAdDisplayContainer()
+    this._destroyAdsManager()
     this._destroyImaContainer()
+    this.$el.hide()
+  }
+
+  destroy() {
+    this._cleanup()
     super.destroy()
   }
 }
