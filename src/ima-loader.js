@@ -6,7 +6,7 @@
  * @param {number} The load timeout in milliseconds
  */
 export default function (cb, secure, timeout) {
-  let win = window, doc = document, el = 'script'
+  let win = window, doc = document, el = 'script', timer = null
 
   let onLoad = (r) => {
     win.clearTimeout(timer)
@@ -19,7 +19,6 @@ export default function (cb, secure, timeout) {
     return
   }
 
-  let timer = null
   let s = secure === true ? 'https:' : ''
   let first = doc.getElementsByTagName(el)[0]
   let script = doc.createElement(el)
