@@ -2,7 +2,9 @@
 <html>
   <head>
     <meta name="viewport" content="width=655, user-scalable=yes" />
-    <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@0.2.80/dist/clappr.min.js"></script> -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/can-autoplay@3.0.0/build/can-autoplay.min.js"></script>
+    <!-- <script src="http://192.168.1.113:8080/console.js"></script> -->
+    <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@0.2.87/dist/clappr.min.js"></script> -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
     <script type="text/javascript" src="clappr-google-ima-html5-preroll-plugin.js"></script>
     <style>
@@ -15,51 +17,44 @@
   </head>
   <body>
     <div class="player"></div>
+    <button class="btn-resize">Resize player</button>
+    <button class="btn-reset">Reset player size</button>
+    <button class="btn-bunny">Bunny with ad</button>
+    <button class="btn-sintel">Sintel with ad</button>
+    <button class="btn-sintel-noad">Sintel without ad</button>
     <script>
       (function () {
+        var $ = Clappr.$;
+        // console.log('Clappr version ' + Clappr.version);
         // Clappr.Log.setLevel(0)
 
         // Sintel trailer - (c) copyright Blender Foundation - www.sintel.org
-        var videoUrl = 'https://static.playmedia-cdn.net/resources/sample/h264_sintel_trailer-1080p.mp4'
+        var SINTEL = 'https://static.playmedia-cdn.net/resources/sample/h264_sintel_trailer-1080p.mp4';
 
         // Big Buck Bunny - (c) copyright 2008, Blender Foundation - www.bigbuckbunny.org
-        // var videoUrl = 'http://www.streambox.fr/playlists/x36xhzz/x36xhzz.m3u8'
+        var BUNNY = 'http://www.streambox.fr/playlists/x36xhzz/x36xhzz.m3u8';
 
         // Single Inline Linear. See https://developers.google.com/interactive-media-ads/docs/sdks/html5/tags
-        var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator='
+        var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator=';
 
         // Single Skippable Inline
-        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dskippablelinear&correlator='
+        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dskippablelinear&correlator=';
 
         // Single VPAID 2.0 Linear
-        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinearvpaid2js&correlator='
+        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinearvpaid2js&correlator=';
 
         // Single VPAID 2.0 Non-Linear
-        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dnonlinearvpaid2js&correlator='
+        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dnonlinearvpaid2js&correlator=';
 
         // Single Non-linear Inline
-        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=480x70&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dnonlinear&correlator='
+        // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=480x70&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dnonlinear&correlator=';
 
-        var player = new Clappr.Player({
-          parentId: ".player",
-          source: videoUrl,
-          disableKeyboardShortcuts: true,
-          disableVideoTagContextMenu: true,
-          autoSeekFromUrl: false,
-          width: '100%',
-          height: '100%',
-          autoPlay: false,
-          playback: {
-            playInline: true,
-          },
-          plugins: {
-            core: [ClapprGoogleImaHtml5PrerollPlugin],
-          },
-          googleImaHtml5PrerollPlugin: {
-            tag: vastTag,
-            // autostart: false,
+        var pluginConfig = function(tagUrl, autostart) {
+          return {
+            tag: tagUrl, // VAST tag URL (or false to disable plugin)
             vpaid: 1, // Default is 0 (DISABLED)
-            // nonLinearDuration: 10000, // Default is 5000 milliseconds
+            autostart: autostart,
+            // nonLinearDuration: 20000, // Default is 15000 milliseconds
             imaLoadTimeout: 3000, // Default is 6000 milliseconds
             events: {
               content_resume_requested: function() { console.log('content_resume_requested') },
@@ -79,22 +74,82 @@
               ad_error: function(e) { console.log('ad_error: ' + e.getError()) },
               error: function(e) { console.log('error', e) },
             }
-          },
-        })
+          };
+        };
 
-        window.resizePlayer = function() {
-          var p = $('.player')[0];
-          p.style.width = '1280px';
-          p.style.height = '720px';
+        var playerConfig = function(p, source, autoPlay) {
+          var po = p.options;
+          po.source = source;
+          po.autoPlay = autoPlay;
+          return po;
         };
-        window.resetPlayer = function() {
+
+        var resizePlayerDiv = function(w, h) {
           var p = $('.player')[0];
-          p.style.width = '';
-          p.style.height = '';
+          p.style.width = w;
+          p.style.height = h;
         };
-      })()
+
+        var buildPlayer = function(source, autoPlay) {
+          return new Clappr.Player({
+            parentId: ".player",
+            source: source,
+            disableKeyboardShortcuts: true,
+            disableVideoTagContextMenu: true,
+            autoSeekFromUrl: false,
+            width: '100%',
+            height: '100%',
+            autoPlay: false, // will use plugin autostart
+            playback: {
+              playInline: true,
+              recycleVideo: Clappr.Browser.isMobile,
+            },
+            plugins: {
+              core: [ClapprGoogleImaHtml5PrerollPlugin],
+            },
+            googleImaHtml5PrerollPlugin: pluginConfig(vastTag, autoPlay),
+          });
+        };
+
+        var player;
+
+        // Handle browser autoplay policy
+        canAutoplay.video({timeout: 800, muted: false}).then(function(o) {
+          var ap = o.result === true;
+          // console.log('autoplay', ap);
+          player = buildPlayer(SINTEL, ap);
+        });
+
+        $('.btn-resize').on('click', function() {
+          resizePlayerDiv('1280px', '720px');
+        });
+
+        $('.btn-reset').on('click', function() {
+          resizePlayerDiv('', '');
+        });
+
+        $('.btn-bunny').on('click', function() {
+          player.consent();
+          var o = playerConfig(player, BUNNY, false);
+          o.googleImaHtml5PrerollPlugin = pluginConfig(vastTag, true);
+          player.configure(o);
+        });
+
+        $('.btn-sintel').on('click', function() {
+          player.consent();
+          var o = playerConfig(player, SINTEL, false);
+          o.googleImaHtml5PrerollPlugin = pluginConfig(vastTag, true);
+          console.log('player options', player.options)
+          player.configure(o);
+        });
+
+        $('.btn-sintel-noad').on('click', function() {
+          player.consent();
+          var o = playerConfig(player, SINTEL, true);
+          o.googleImaHtml5PrerollPlugin = pluginConfig(false, true);
+          player.configure(o);
+        });
+      })();
     </script>
-    <button onclick="window.resizePlayer()">Resize player</button>
-    <button onclick="window.resetPlayer()">Reset player size</button>
   </body>
 </html>

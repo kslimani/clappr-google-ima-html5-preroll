@@ -4,7 +4,7 @@
 
 This is a simple __proof of concept__ based on [Clappr ad skeleton plugin](https://github.com/kslimani/clappr-html5-preroll-skeleton-plugin) example.
 
-This plugin is supported __ONLY__ by Clappr version `0.2.66` or greater. (_For older Clappr versions, use the `0.0.7` version of the plugin_).
+This plugin is supported __ONLY__ by Clappr version `0.2.87` or greater. (_For older Clappr versions, use the `0.0.7` or `0.1.0` version of the plugin_).
 
 On mobile devices, it support only [Clappr playbacks](https://github.com/clappr/clappr/tree/master/src/playbacks) which use an HTML5 video element.
 
@@ -26,17 +26,17 @@ Then just add `ClapprGoogleImaHtml5PrerollPlugin` into the list of plugins of yo
 ```javascript
 var player = new Clappr.Player({
   source: "http://your.video/here.mp4",
-  autoPlay: false, // Mandatory player option
+  autoPlay: false, // Set to false and use plugin autostart option (or set to true if tag is false)
   plugins: {
     core: [ClapprGoogleImaHtml5PrerollPlugin],
   },
   googleImaHtml5PrerollPlugin: {
-    tag: 'VAST_TAG_URL',
+    tag: 'VAST_TAG_URL', // VAST tag URL (or false to disable plugin)
     vpaid: 1, // Default is 0 (0 is DISABLED, 1 is ENABLED and 2 is INSECURE)
     // autostart: false, // Default is true
     // events: { /* Event map */ },
     // imaLoadTimeout: 3000, // Default is 6000 milliseconds
-    // nonLinearDuration: 10000, // Default is 5000 milliseconds
+    // nonLinearDuration: 20000, // Default is 15000 milliseconds
   }
 });
 ```
