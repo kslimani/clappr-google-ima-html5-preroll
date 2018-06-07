@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=655, user-scalable=yes" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/can-autoplay@3.0.0/build/can-autoplay.min.js"></script>
     <!-- <script src="http://192.168.1.113:8080/console.js"></script> -->
     <!-- <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@0.2.87/dist/clappr.min.js"></script> -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
@@ -24,7 +25,7 @@
     <script>
       (function () {
         var $ = Clappr.$;
-        var isMobile = Clappr.Browser.isMobile || Clappr.Browser.isSafari;
+        // console.log('Clappr version ' + Clappr.version);
         // Clappr.Log.setLevel(0)
 
         // Sintel trailer - (c) copyright Blender Foundation - www.sintel.org
@@ -89,24 +90,35 @@
           p.style.height = h;
         };
 
-        var player = new Clappr.Player({
-          parentId: ".player",
-          source: SINTEL,
-          disableKeyboardShortcuts: true,
-          disableVideoTagContextMenu: true,
-          autoSeekFromUrl: false,
-          width: '100%',
-          height: '100%',
-          autoPlay: false,
-          playback: {
-            playInline: true,
-            recycleVideo: isMobile,
-          },
-          plugins: {
-            core: [ClapprGoogleImaHtml5PrerollPlugin],
-          },
-          googleImaHtml5PrerollPlugin: pluginConfig(vastTag, !isMobile),
-        })
+        var buildPlayer = function(source, autoPlay) {
+          return new Clappr.Player({
+            parentId: ".player",
+            source: source,
+            disableKeyboardShortcuts: true,
+            disableVideoTagContextMenu: true,
+            autoSeekFromUrl: false,
+            width: '100%',
+            height: '100%',
+            autoPlay: false, // will use plugin autostart
+            playback: {
+              playInline: true,
+              recycleVideo: Clappr.Browser.isMobile,
+            },
+            plugins: {
+              core: [ClapprGoogleImaHtml5PrerollPlugin],
+            },
+            googleImaHtml5PrerollPlugin: pluginConfig(vastTag, autoPlay),
+          });
+        };
+
+        var player;
+
+        // Handle browser autoplay policy
+        canAutoplay.video({timeout: 800, muted: false}).then(function(o) {
+          var ap = o.result === true;
+          // console.log('autoplay', ap);
+          player = buildPlayer(SINTEL, ap);
+        });
 
         $('.btn-resize').on('click', function() {
           resizePlayerDiv('1280px', '720px');
