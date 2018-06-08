@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/github-dark.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clappr/0.2.66/clappr.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/can-autoplay@3.0.0/build/can-autoplay.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@0.2.95/dist/clappr.min.js"></script>
     <script src="javascripts/main.js"></script>
     <script type="text/javascript" src="javascripts/clappr-google-ima-html5-preroll-plugin.min.js"></script>
     <!--[if lt IE 9]>
@@ -63,26 +64,34 @@
               // Single Inline Linear. See https://developers.google.com/interactive-media-ads/docs/sdks/html5/tags
               var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dlinear&correlator='
 
-              var player = new Clappr.Player({
-                parentId: "#player",
-                source: videoUrl,
-                disableKeyboardShortcuts: true,
-                disableVideoTagContextMenu: true,
-                autoSeekFromUrl: false,
-                autoPlay: false,
-                width: "100%",
-                height: "100%",
-                playback: {
-                  playInline: true,
-                },
-                plugins: {
-                  core: [ClapprGoogleImaHtml5PrerollPlugin],
-                },
-                googleImaHtml5PrerollPlugin: {
-                  tag: vastTag,
-                  // autostart: false,
-                },
-              })
+              var player;
+
+              // Handle browser autoplay policy
+              canAutoplay.video({timeout: 800, muted: false}).then(function(o) {
+                var ap = o.result === true;
+                player = new Clappr.Player({
+                  parentId: "#player",
+                  source: videoUrl,
+                  disableKeyboardShortcuts: true,
+                  disableVideoTagContextMenu: true,
+                  autoSeekFromUrl: false,
+                  autoPlay: false,
+                  width: "100%",
+                  height: "100%",
+                  playback: {
+                    playInline: true,
+                    recycleVideo: Clappr.Browser.isMobile,
+                  },
+                  plugins: {
+                    core: [ClapprGoogleImaHtml5PrerollPlugin],
+                  },
+                  googleImaHtml5PrerollPlugin: {
+                    tag: vastTag,
+                    autostart: ap,
+                  },
+                });
+              });
+
             })()
           </script>
         </div>
