@@ -62,6 +62,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._vpaid = this.cfg.hasOwnProperty('vpaid') ? this.cfg.vpaid : 0 // Default VpaidMode is DISABLED
     this._nonLinearDuration = this.cfg.nonLinearDuration > 0 ? this.cfg.nonLinearDuration : 15000 // Default is 15 seconds
     this._imaLoadtimeout = this.cfg.imaLoadTimeout > 0 ? this.cfg.imaLoadTimeout : 6000 // Default is 6 seconds
+    this._usePosterIcon = !!this.cfg.usePosterIcon
     // TODO: Add an option which is an array of plugin name to disable
   }
 
@@ -141,6 +142,14 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
     // Attempt to get poster plugin. (May interfere with media control)
     this._posterPlugin = this._container.getPlugin('poster')
+
+    // Attempt to capture poster play svg icon
+    if (this._posterPlugin && this._usePosterIcon) {
+      let svg = this._posterPlugin.$el.find('svg')
+      if (svg[0]) {
+        this._playSvg = svg[0]
+      }
+    }
 
     // Attempt to get click-to-pause plugin. (May interfere with advert click handling)
     this._clickToPausePlugin = this._container.getPlugin('click_to_pause')
@@ -413,7 +422,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
         this._requestAd()
       }
 
-      this._setOverlayIcon(playSvg)
+      this._setOverlayIcon(this._playSvg || playSvg)
       this._clickOverlay.addEventListener('click', startAd, false)
 
       return
