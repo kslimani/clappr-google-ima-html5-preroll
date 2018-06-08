@@ -114,8 +114,21 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
       this._pluginError('failed to get Clappr playback')
     }
 
+    // Get current container. (To disable bindings during ad playback)
+    this._container = this.core.getCurrentContainer()
+    if (!this._container) {
+      this._pluginError('failed to get Clappr current container')
+    }
+
     // Ensure plugin configuration has VAST tag
-    if (!this._tag) return
+    if (!this._tag) {
+      // Handle content autoplay if no tag
+      if (!this.options.autoPlay && this._autostart) {
+        this._container.play()
+      }
+
+      return
+    }
 
     // Ensure playback is using HTML5 video element if mobile device
     if (this._playback.tagName !== 'video' && Browser.isMobile) return
@@ -125,12 +138,6 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
     this.$el.show()
     this._$clickOverlay.show()
-
-    // Get current container. (To disable bindings during ad playback)
-    this._container = this.core.getCurrentContainer()
-    if (!this._container) {
-      this._pluginError('failed to get Clappr current container')
-    }
 
     // Attempt to get poster plugin. (May interfere with media control)
     this._posterPlugin = this._container.getPlugin('poster')
