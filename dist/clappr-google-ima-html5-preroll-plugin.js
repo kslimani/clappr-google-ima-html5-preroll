@@ -106,7 +106,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = function (cb, secure, timeout) {
   var win = window,
       doc = document,
-      el = 'script';
+      el = 'script',
+      timer = null;
 
   var onLoad = function onLoad(r) {
     win.clearTimeout(timer);
@@ -119,7 +120,6 @@ exports.default = function (cb, secure, timeout) {
     return;
   }
 
-  var timer = null;
   var s = secure === true ? 'https:' : '';
   var first = doc.getElementsByTagName(el)[0];
   var script = doc.createElement(el);
@@ -154,7 +154,7 @@ exports = module.exports = __webpack_require__(8)(undefined);
 
 
 // module
-exports.push([module.i, ".google-ima-html5-preroll-plugin[data-preroll] {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: left; }\n  .google-ima-html5-preroll-plugin[data-preroll] .preroll-container[data-preroll] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%; }\n  .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    z-index: 1337;\n    background-color: #000;\n    cursor: pointer;\n    overflow: hidden;\n    display: none; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll]:hover .preroll-overlay-icon[data-preroll] {\n      opacity: 1; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll] .preroll-overlay-icon[data-preroll] {\n      position: relative;\n      width: 100%;\n      height: 25%;\n      top: 50%;\n      transform: translateY(-50%);\n      opacity: 0.75; }\n", ""]);
+exports.push([module.i, ".google-ima-html5-preroll-plugin[data-preroll] {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: left; }\n  .google-ima-html5-preroll-plugin[data-preroll] .preroll-container[data-preroll] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-container[data-preroll] .ima-container[data-preroll] {\n      position: absolute;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%; }\n  .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    z-index: 1337;\n    background-color: #000;\n    cursor: pointer;\n    overflow: hidden;\n    display: none; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll]:hover .preroll-overlay-icon[data-preroll] {\n      opacity: 1; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll] .preroll-overlay-icon[data-preroll] {\n      position: relative;\n      width: 100%;\n      height: 25%;\n      top: 50%;\n      transform: translateY(-50%);\n      opacity: 0.75; }\n", ""]);
 
 // exports
 
@@ -429,6 +429,11 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
         'data-preroll': ''
       };
     }
+  }, {
+    key: 'cfg',
+    get: function get() {
+      return this.options.googleImaHtml5PrerollPlugin || {};
+    }
   }]);
 
   function ClapprGoogleImaHtml5PrerollPlugin(core) {
@@ -436,32 +441,12 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
 
     var _this = _possibleConstructorReturn(this, (ClapprGoogleImaHtml5PrerollPlugin.__proto__ || Object.getPrototypeOf(ClapprGoogleImaHtml5PrerollPlugin)).call(this, core));
 
+    _this._imaIsloading = false;
     _this._imaIsloaded = false;
     _this._imaLoadResult = false;
     _this._pluginIsReady = false;
-
-    var cfg = _this.options.googleImaHtml5PrerollPlugin;
-    if (!cfg) {
-      _this._pluginError('configuration is missing');
-    }
-
-    _this._tag = cfg.tag;
-    _this._autostart = cfg.autostart === false ? false : true; // Default is true
-    _this._events = _clappr.$.isPlainObject(cfg.events) ? cfg.events : {};
-    var timeout = cfg.imaLoadTimeout > 0 ? cfg.imaLoadTimeout : 6000; // Default is 6 seconds
-
-    // TODO: Add an option which is an array of plugin name to disable
-
-    if (!_this._tag) {
-      _this._pluginError('tag option is required');
-    }
-
-    // Ensure Google IMA SDK is loaded
-    (0, _imaLoader2.default)(function (result) {
-      _this._imaLoadResult = result;
-      _this._imaIsloaded = true;
-      _this._initImaSDK();
-    }, true, timeout);
+    _this._controlsDisabled = false;
+    _this._isLoadingContent = false;
     return _this;
   }
 
@@ -470,6 +455,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
     value: function bindEvents() {
       this.listenTo(this.core.mediaControl, _clappr.Events.MEDIACONTROL_CONTAINERCHANGED, this._onMediaControlContainerChanged);
       this.listenTo(this.core, _clappr.Events.CORE_READY, this._onCoreReady);
+      _clappr.Mediator.on(this.core.options.playerId + ':' + _clappr.Events.PLAYER_RESIZE, this._onPlayerResize, this);
     }
   }, {
     key: '_onMediaControlContainerChanged',
@@ -477,33 +463,51 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       this.core.mediaControl.container.$el.append(this.el);
     }
   }, {
+    key: '_onCoreReady',
+    value: function _onCoreReady() {
+      // Since Clappr 0.2.84, "CORE_READY" event is trigerred after create container on load
+      this._configure();
+      this._loadImaSDK();
+      this._initPlugin();
+    }
+  }, {
+    key: '_onPlayerResize',
+    value: function _onPlayerResize(evt) {
+      // Signal player resize to ads manager
+      this._adsManager && this._adsManager.resize(this._contentElement.offsetWidth, this._contentElement.offsetHeight, google.ima.ViewMode.NORMAL);
+    }
+  }, {
     key: '_pluginError',
     value: function _pluginError(msg) {
       throw new Error(this.name + ': ' + msg);
     }
   }, {
-    key: '_onCoreReady',
-    value: function _onCoreReady() {
-      // Get current container. (To disable bindings during ad playback)
-      this._container = this.core.getCurrentContainer();
-      if (!this._container) {
-        this._pluginError('failed to get Clappr current container');
-      }
+    key: '_configure',
+    value: function _configure() {
+      this._tag = this.cfg.tag || false;
+      this._autostart = this.cfg.autostart === false ? false : true; // Default is true
+      this._events = _clappr.$.isPlainObject(this.cfg.events) ? this.cfg.events : {};
+      this._vpaid = this.cfg.hasOwnProperty('vpaid') ? this.cfg.vpaid : 0; // Default VpaidMode is DISABLED
+      this._nonLinearDuration = this.cfg.nonLinearDuration > 0 ? this.cfg.nonLinearDuration : 15000; // Default is 15 seconds
+      this._imaLoadtimeout = this.cfg.imaLoadTimeout > 0 ? this.cfg.imaLoadTimeout : 6000; // Default is 6 seconds
+      this._usePosterIcon = !!this.cfg.usePosterIcon;
+      // TODO: Add an option which is an array of plugin name to disable
+    }
+  }, {
+    key: '_loadImaSDK',
+    value: function _loadImaSDK() {
+      var _this2 = this;
 
-      // Get current playback. (To get playback element)
-      this._playback = this.core.getCurrentPlayback();
-      if (!this._playback) {
-        this._pluginError('failed to get Clappr playback');
-      }
+      // Ensure is lazy loaded once (only if tag is filled)
+      if (this._imaIsloading || this._imaIsloaded || !this._tag) return;
 
-      // Attempt to get poster plugin. (May interfere with media control)
-      this._posterPlugin = this._container.getPlugin('poster'
-
-      // Attempt to get click-to-pause plugin. (May interfere with advert click handling)
-      );this._clickToPausePlugin = this._container.getPlugin('click_to_pause');
-
-      this._contentElement = this._playback.el;
-      this._initPlugin();
+      this._imaIsloading = true;
+      (0, _imaLoader2.default)(function (result) {
+        _this2._imaLoadResult = result;
+        _this2._imaIsloading = false;
+        _this2._imaIsloaded = true;
+        _this2._initImaSDK();
+      }, true, this._imaLoadtimeout);
     }
   }, {
     key: '_disableControls',
@@ -512,41 +516,92 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       this._posterPlugin && this._posterPlugin.disable();
       this._clickToPausePlugin && this._clickToPausePlugin.disable();
       this._container.stopListening();
+      this._controlsDisabled = true;
     }
   }, {
     key: '_enableControls',
     value: function _enableControls() {
-      this._clickToPausePlugin && this._clickToPausePlugin.enable();
-      this._posterPlugin && this._posterPlugin.enable();
-      this.core.enableMediaControl();
+      if (this._controlsDisabled) {
+        this._clickToPausePlugin && this._clickToPausePlugin.enable();
+        this._posterPlugin && this._posterPlugin.enable();
+        this.core.enableMediaControl();
+        this._controlsDisabled = false;
+      }
     }
   }, {
     key: '_initPlugin',
     value: function _initPlugin() {
-      var _this2 = this;
+      var _this3 = this;
 
-      // Ensure browser can play video content. (Avoid to display an ad with nothing after)
-      if (this._playback.name === 'no_op') {
-        this.destroy();
+      this._pluginIsReady = false;
+
+      // Ensure not loading video content (after ad played)
+      if (this._isLoadingContent) {
+        this._isLoadingContent = false;
+        this.$el.hide();
+
+        return;
+      }
+
+      this._cleanup
+
+      // Get current playback. (To get playback element)
+      ();this._playback = this.core.getCurrentPlayback();
+      if (!this._playback) {
+        this._pluginError('failed to get Clappr playback');
+      }
+
+      // Get current container. (To disable bindings during ad playback)
+      this._container = this.core.getCurrentContainer();
+      if (!this._container) {
+        this._pluginError('failed to get Clappr current container');
+      }
+
+      // Ensure plugin configuration has VAST tag
+      if (!this._tag) {
+        // Handle content autoplay if no tag
+        if (!this.options.autoPlay && this._autostart) {
+          this._container.play();
+        }
 
         return;
       }
 
       // Ensure playback is using HTML5 video element if mobile device
-      if (this._playback.tagName !== 'video' && _clappr.Browser.isMobile) {
-        this.destroy();
+      if (this._playback.tagName !== 'video' && _clappr.Browser.isMobile) return;
 
-        return;
-      }
+      // Ensure browser can play video content. (Avoid to display an ad with nothing after)
+      if (this._playback.name === 'no_op') return;
 
-      // Display overlay (with loader icon)
+      this.$el.show();
       this._$clickOverlay.show
 
-      // Disable Clappr during ad playback
-      ();process.nextTick(function () {
-        return _this2._disableControls();
-      });
+      // Attempt to get poster plugin. (May interfere with media control)
+      ();this._posterPlugin = this._container.getPlugin('poster'
 
+      // Attempt to capture poster play svg icon
+      );if (this._posterPlugin && this._usePosterIcon) {
+        var _svg = this._posterPlugin.$el.find('svg');
+        if (_svg[0]) {
+          this._playSvg = _svg[0];
+        }
+      }
+
+      // Attempt to get click-to-pause plugin. (May interfere with advert click handling)
+      this._clickToPausePlugin = this._container.getPlugin('click_to_pause'
+
+      // Disable Clappr during ad playback
+      );process.nextTick(function () {
+        return _this3._disableControls();
+      }
+
+      // Attempt to get error screen plugin. (May interfere with dummy source switch)
+      );this._errorScreenPlugin = this.core.getPlugin('error_screen'
+
+      // Disable error screen plugin (will be re-enabled when source reloaded)
+      );this._errorScreenPlugin && this._errorScreenPlugin.disable();
+
+      this._contentElement = this._playback.el;
       this._useDummyMp4Video = false;
       this._useBlackSvgPixel = false;
 
@@ -575,7 +630,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       // IMA does not clean ad container when finished
       // For the sake of simplicity, wrap into a <div> element
       ();if (this._adContainer) {
-        this._imaContainer = document.createElement('div');
+        this._imaContainer = (0, _clappr.$)("<div />").addClass("ima-container").attr('data-preroll', '')[0];
         this._adContainer.appendChild(this._imaContainer);
       }
     }
@@ -591,7 +646,26 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
     key: '_createAdDisplayContainer',
     value: function _createAdDisplayContainer() {
       this._createImaContainer();
+      this._destroyAdDisplayContainer();
       this._adDisplayContainer = new google.ima.AdDisplayContainer(this._imaContainer, this._contentElement);
+    }
+  }, {
+    key: '_destroyAdDisplayContainer',
+    value: function _destroyAdDisplayContainer() {
+      if (this._adDisplayContainer) {
+        this._adDisplayContainer.destroy();
+        delete this._adDisplayContainer;
+      }
+    }
+  }, {
+    key: '_vpaidMode',
+    value: function _vpaidMode() {
+      // For more details, read https://developers.google.com/interactive-media-ads/docs/sdks/html5/vpaid2js#enabling
+      if (this._vpaid === 0) return google.ima.ImaSdkSettings.VpaidMode.DISABLED;
+
+      if (this._vpaid > 1) return google.ima.ImaSdkSettings.VpaidMode.INSECURE;
+
+      return google.ima.ImaSdkSettings.VpaidMode.ENABLED;
     }
   }, {
     key: '_initImaSDK',
@@ -608,22 +682,39 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
         return;
       }
 
-      this._createAdDisplayContainer();
-      this._requestAd();
+      // Setup VPAID support
+      google.ima.settings.setVpaidMode(this._vpaidMode());
+
+      this._setupOverlay();
+    }
+  }, {
+    key: '_destroyAdsLoader',
+    value: function _destroyAdsLoader() {
+      if (this._adsLoader) {
+        this._adsLoader.contentComplete();
+        this._adsLoader.destroy();
+        delete this._adsLoader;
+      }
     }
   }, {
     key: '_requestAd',
     value: function _requestAd() {
-      var _this3 = this;
+      var _this4 = this;
 
-      var adsLoader = new google.ima.AdsLoader(this._adDisplayContainer);
+      // Destroy any previously created ads loader instance
+      // IMA guidelines are to use the same AdsLoader instance for the entire
+      // lifecycle of your page, but Clappr may create a new video element if
+      // configure() method is called with a source.
+      this._destroyAdsLoader();
 
-      adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function (e) {
-        _this3._onAdsManagerLoaded(e);
+      this._adsLoader = new google.ima.AdsLoader(this._adDisplayContainer);
+
+      this._adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function (e) {
+        _this4._onAdsManagerLoaded(e);
       });
 
-      adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, function (e) {
-        _this3._onAdError(e);
+      this._adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, function (e) {
+        _this4._onAdError(e);
       });
 
       var adsRequest = new google.ima.AdsRequest();
@@ -633,83 +724,109 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       adsRequest.nonLinearAdSlotWidth = this._contentElement.offsetWidth;
       adsRequest.nonLinearAdSlotHeight = this._contentElement.offsetHeight;
 
+      // Assume playback is consented by user
+      adsRequest.setAdWillAutoPlay(true);
+      adsRequest.setAdWillPlayMuted(false);
+
       // requestAds() trigger _onAdsManagerLoaded() or _onAdError()
-      adsLoader.requestAds(adsRequest);
+      this._adsLoader.requestAds(adsRequest);
+    }
+  }, {
+    key: '_destroyAdsManager',
+    value: function _destroyAdsManager() {
+      if (this._adsManager) {
+        this._adsManager.destroy();
+        delete this._adsManager;
+      }
     }
   }, {
     key: '_onAdsManagerLoaded',
     value: function _onAdsManagerLoaded(adsManagerLoadedEvent) {
-      var _this4 = this;
+      var _this5 = this;
 
       var adsRenderingSettings = new google.ima.AdsRenderingSettings();
 
       // Plugin will handle playback state when ad has completed
       adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = false;
 
+      // Destroy any previously created ads manager
+      this._destroyAdsManager();
+
+      this._adLoaded = false;
+
       this._adsManager = adsManagerLoadedEvent.getAdsManager(this._contentElement, adsRenderingSettings);
 
       this._adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, function (e) {
-        _this4._onAdError(e);
+        _this5._onAdError(e);
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, function () {
-        _this4._imaEvent('content_resume_requested');
-        _this4._playVideoContent();
+        _this5._imaEvent('content_resume_requested');
+        _this5._playVideoContent();
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, function () {
-        _this4._imaEvent('content_pause_requested');
+        _this5._imaEvent('content_pause_requested');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, function () {
-        _this4._imaEvent('loaded');
+        _this5._adLoaded = true;
+        _this5._imaEvent('loaded');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.CLICK, function () {
-        _this4._imaEvent('click');
+        _this5._imaEvent('click');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.IMPRESSION, function () {
-        _this4._imaEvent('impression');
+        _this5._imaEvent('impression');
       });
 
-      this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, function () {
-        _this4._imaEvent('started');
+      this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, function (e) {
+        // Non-linear ad is displayed before content for duration
+        // FIXME: find a way to display it while playing content
+        if (!e.getAd().isLinear()) {
+          setTimeout(function () {
+            _this5._playVideoContent();
+          }, _this5._nonLinearDuration);
+        }
+
+        _this5._imaEvent('started');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.FIRST_QUARTILE, function () {
-        _this4._imaEvent('first_quartile');
+        _this5._imaEvent('first_quartile');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.MIDPOINT, function () {
-        _this4._imaEvent('midpoint');
+        _this5._imaEvent('midpoint');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.THIRD_QUARTILE, function () {
-        _this4._imaEvent('third_quartile');
+        _this5._imaEvent('third_quartile');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, function () {
-        _this4._imaEvent('complete');
+        _this5._imaEvent('complete');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.PAUSED, function () {
-        _this4._imaEvent('paused');
+        _this5._imaEvent('paused');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.RESUMED, function () {
-        _this4._imaEvent('resumed');
+        _this5._imaEvent('resumed');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.SKIPPED, function () {
-        _this4._imaEvent('skipped');
+        _this5._imaEvent('skipped');
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.USER_CLOSE, function () {
-        _this4._imaEvent('user_close');
+        _this5._imaEvent('user_close');
       });
 
-      this._setupOverlay();
+      this._playAds();
     }
   }, {
     key: '_onAdError',
@@ -718,7 +835,10 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       // google.ima.AdError : https://developers.google.com/interactive-media-ads/docs/sdks/html5/v3/apis#ima.AdError
       // console.log('onAdError: ' + adErrorEvent.getError())
       this._imaEvent('ad_error', adErrorEvent);
-      this._playVideoContent();
+
+      if (!this._adLoaded) {
+        this._playVideoContent();
+      }
     }
   }, {
     key: '_imaEvent',
@@ -728,39 +848,46 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
   }, {
     key: '_setupOverlay',
     value: function _setupOverlay() {
-      var _this5 = this;
+      var _this6 = this;
 
       // Ad start must be done as the result of a user action on mobile.
       // For more details, read https://developers.google.com/interactive-media-ads/docs/sdks/html5/mobile_video
-      if (!this._autostart || _clappr.Browser.isMobile) {
+      if (!this._autostart) {
         var startAd = function startAd(e) {
           try {
-            _this5._clickOverlay.removeEventListener('click', startAd, false);
+            _this6._clickOverlay.removeEventListener('click', startAd, false);
             e.preventDefault();
             e.stopPropagation();
           } catch (err) {}
-          _this5._$clickOverlay.hide
+
+          _this6._setOverlayIcon(_loader2.default
+
           // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
-          ();_this5._playback.consent();
-          _this5._playAds();
+          );_this6._playback.consent
+
+          // Request ad
+          ();_this6._createAdDisplayContainer();
+          _this6._adDisplayContainer.initialize // Must be called on overlay click
+          ();_this6._requestAd();
         };
 
-        this._setPlayIcon();
+        this._setOverlayIcon(this._playSvg || _play2.default);
         this._clickOverlay.addEventListener('click', startAd, false);
 
         return;
       }
 
-      // Otherwise, autostart ad display
-      this._$clickOverlay.hide();
-      this._playAds();
+      // Otherwise, request ad
+      this._setOverlayIcon(_loader2.default);
+      this._createAdDisplayContainer();
+      this._adDisplayContainer.initialize();
+      this._requestAd();
     }
   }, {
     key: '_playAds',
     value: function _playAds() {
-      this._adDisplayContainer.initialize();
-
       try {
+        this._$clickOverlay.hide();
         this._adsManager.init(this._contentElement.offsetWidth, this._contentElement.offsetHeight, google.ima.ViewMode.NORMAL);
         this._adsManager.start();
       } catch (e) {
@@ -772,21 +899,26 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
   }, {
     key: '_playVideoContent',
     value: function _playVideoContent() {
-      var _this6 = this;
+      var _this7 = this;
 
       process.nextTick(function () {
-        _this6._enableControls();
-        _this6.$el.hide
+        _this7._enableControls();
+        _this7.$el.hide
 
         // Ensure recycleVideo playback option is enabled with mobile devices (Clappr 0.2.66 or greater)
-        ();var playbackOptions = _this6.core.options.playback || {};
+        ();var playbackOptions = _this7.core.options.playback || {};
         playbackOptions.recycleVideo = _clappr.Browser.isMobile;
 
-        _this6.core.configure({
-          playback: playbackOptions,
-          sources: _this6.core.options.sources,
-          autoPlay: true
-        });
+        // Signal loading video content
+        _this7._isLoadingContent = true;
+
+        setTimeout(function () {
+          _this7.core.configure({
+            playback: playbackOptions,
+            sources: _this7.core.options.sources,
+            autoPlay: true // Assume playback has user consent
+          });
+        }, 100);
       });
     }
   }, {
@@ -805,8 +937,6 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       this._remove();
       this._$adContainer = (0, _clappr.$)("<div />").addClass("preroll-container").attr('data-preroll', '');
       this._$clickOverlay = (0, _clappr.$)("<div />").addClass("preroll-overlay").attr('data-preroll', '');
-      this._$clickOverlay.append(_loader2.default).find('svg path').css('fill', '#fff');
-      this._$clickOverlay.find('svg').addClass('preroll-overlay-icon').attr('data-preroll', '');
       this.$el.append(this._$adContainer);
       this.$el.append(this._$clickOverlay);
       this.$el.append(_clappr.Styler.getStyleFor(_style2.default));
@@ -816,19 +946,30 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       return this;
     }
   }, {
-    key: '_setPlayIcon',
-    value: function _setPlayIcon() {
-      this._$clickOverlay.find('svg').replaceWith(_play2.default);
+    key: '_setOverlayIcon',
+    value: function _setOverlayIcon(icon) {
+      var svg = this._$clickOverlay.find('svg');
+      if (svg[0]) {
+        this._$clickOverlay.find('svg').replaceWith(icon);
+      } else {
+        this._$clickOverlay.append(icon);
+      }
       this._$clickOverlay.find('svg path').css('fill', '#fff');
       this._$clickOverlay.find('svg').addClass('preroll-overlay-icon').attr('data-preroll', '');
     }
   }, {
+    key: '_cleanup',
+    value: function _cleanup() {
+      this._destroyAdsLoader();
+      this._destroyAdDisplayContainer();
+      this._destroyAdsManager();
+      this._destroyImaContainer();
+      this.$el.hide();
+    }
+  }, {
     key: 'destroy',
     value: function destroy() {
-      if (this._adsManager) {
-        this._adsManager.destroy();
-      }
-      this._destroyImaContainer();
+      this._cleanup();
       _get(ClapprGoogleImaHtml5PrerollPlugin.prototype.__proto__ || Object.getPrototypeOf(ClapprGoogleImaHtml5PrerollPlugin.prototype), 'destroy', this).call(this);
     }
   }]);
