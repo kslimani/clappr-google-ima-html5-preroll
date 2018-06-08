@@ -49,6 +49,8 @@
         // Single Non-linear Inline
         // var vastTag = 'https://pubads.g.doubleclick.net/gampad/ads?sz=480x70&iu=/124319096/external/single_ad_samples&ciu_szs=300x250&impl=s&gdfp_req=1&env=vp&output=vast&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ct%3Dnonlinear&correlator=';
 
+        var player;
+
         var pluginConfig = function(tagUrl, autostart) {
           return {
             tag: tagUrl, // VAST tag URL (or false to disable plugin)
@@ -77,10 +79,10 @@
           };
         };
 
-        var playerConfig = function(p, source, autoPlay) {
-          var po = p.options;
+        var playerConfig = function(source, tagUrl, autoPlay) {
+          var po = player.options;
           po.source = source;
-          po.autoPlay = autoPlay;
+          po.googleImaHtml5PrerollPlugin = pluginConfig(tagUrl, autoPlay);
           return po;
         };
 
@@ -111,8 +113,6 @@
           });
         };
 
-        var player;
-
         // Handle browser autoplay policy
         canAutoplay.video({timeout: 800, muted: false}).then(function(o) {
           var ap = o.result === true;
@@ -129,24 +129,15 @@
         });
 
         $('.btn-bunny').on('click', function() {
-          player.consent();
-          var o = playerConfig(player, BUNNY, false);
-          o.googleImaHtml5PrerollPlugin = pluginConfig(vastTag, true);
-          player.configure(o);
+          player.consent().configure(playerConfig(BUNNY, vastTag, true));
         });
 
         $('.btn-sintel').on('click', function() {
-          player.consent();
-          var o = playerConfig(player, SINTEL, false);
-          o.googleImaHtml5PrerollPlugin = pluginConfig(vastTag, true);
-          player.configure(o);
+          player.consent().configure(playerConfig(SINTEL, vastTag, true));
         });
 
         $('.btn-sintel-noad').on('click', function() {
-          player.consent();
-          var o = playerConfig(player, SINTEL, true);
-          o.googleImaHtml5PrerollPlugin = pluginConfig(false, true);
-          player.configure(o);
+          player.consent().configure(playerConfig(SINTEL, false, true));
         });
       })();
     </script>
