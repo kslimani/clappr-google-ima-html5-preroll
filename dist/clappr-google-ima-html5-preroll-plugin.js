@@ -534,6 +534,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       var _this3 = this;
 
       this._pluginIsReady = false;
+      this._playVideoContentRequested = false;
 
       // Ensure not loading video content (after ad played)
       if (this._isLoadingContent) {
@@ -900,6 +901,12 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
     key: '_playVideoContent',
     value: function _playVideoContent() {
       var _this7 = this;
+
+      // Ensure video content playback is not already requested
+      // This may happen with VPAID unexpected AdError
+      if (this._playVideoContentRequested) return;
+
+      this._playVideoContentRequested = true;
 
       process.nextTick(function () {
         _this7._enableControls();
