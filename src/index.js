@@ -98,6 +98,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
   _initPlugin() {
     this._pluginIsReady = false
+    this._playVideoContentRequested = false
 
     // Ensure not loading video content (after ad played)
     if (this._isLoadingContent) {
@@ -452,6 +453,12 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   }
 
   _playVideoContent() {
+    // Ensure video content playback is not already requested
+    // This may happen with VPAID unexpected AdError
+    if (this._playVideoContentRequested) return
+
+    this._playVideoContentRequested = true
+
     process.nextTick(() => {
       this._enableControls()
       this.$el.hide()
