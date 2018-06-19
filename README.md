@@ -1,6 +1,6 @@
 # Google IMA HTML5 preroll ad plugin for Clappr player
 
-[Google IMA HTML5 SDK (v3)](https://developers.google.com/interactive-media-ads/docs/sdks/html5/quickstart) __PREROLL ONLY__ ad plugin for [Clappr](https://github.com/clappr/clappr) video player.
+[Google IMA HTML5 SDK (v3)](https://developers.google.com/interactive-media-ads/docs/sdks/html5/quickstart) __LINEAR PREROLL AD ONLY__ ad plugin for [Clappr](https://github.com/clappr/clappr) video player.
 
 This is a simple __proof of concept__ based on [Clappr ad skeleton plugin](https://github.com/kslimani/clappr-html5-preroll-skeleton-plugin) example.
 
@@ -37,6 +37,7 @@ var player = new Clappr.Player({
     // events: { /* Event map */ },
     // imaLoadTimeout: 3000, // Default is 6000 milliseconds
     // nonLinearDuration: 20000, // Default is 15000 milliseconds
+    // maxDuration: 30000, // Default is false (DISABLED)
   }
 });
 ```
