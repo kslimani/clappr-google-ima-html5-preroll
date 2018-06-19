@@ -25,6 +25,7 @@
     <script>
       (function () {
         var $ = Clappr.$;
+        var isMobile = Clappr.Browser.isMobile;
         // console.log('Clappr version ' + Clappr.version);
         // Clappr.Log.setLevel(0)
 
@@ -51,6 +52,11 @@
 
         var player;
 
+        var trackEvent = function (n, e) {
+          n = 'trackEvent: ' + n;
+          console.log.apply(this, e && [n, e] || [n]);
+        };
+
         var pluginConfig = function(tagUrl, autostart) {
           return {
             tag: tagUrl, // VAST tag URL (or false to disable plugin)
@@ -58,23 +64,24 @@
             autostart: autostart,
             // nonLinearDuration: 20000, // Default is 15000 milliseconds
             imaLoadTimeout: 3000, // Default is 6000 milliseconds
+            // maxDuration: 30000, // Default is false (DISABLED)
             events: {
-              content_resume_requested: function() { console.log('content_resume_requested') },
-              content_pause_requested: function() { console.log('content_pause_requested') },
-              loaded: function() { console.log('loaded') },
-              click: function() { console.log('click') },
-              impression: function() { console.log('impression') },
-              started: function() { console.log('started') },
-              first_quartile: function() { console.log('first_quartile') },
-              midpoint: function() { console.log('midpoint') },
-              third_quartile: function() { console.log('third_quartile') },
-              complete: function() { console.log('complete') },
-              paused: function() { console.log('paused') },
-              resumed: function() { console.log('resumed') },
-              skipped: function() { console.log('skipped') },
-              user_close: function() { console.log('user_close') },
-              ad_error: function(e) { console.log('ad_error: ' + e.getError()) },
-              error: function(e) { console.log('error', e) },
+              content_resume_requested: function() { trackEvent('content_resume_requested') },
+              content_pause_requested: function() { trackEvent('content_pause_requested') },
+              loaded: function() { trackEvent('loaded') },
+              click: function() { trackEvent('click') },
+              impression: function() { trackEvent('impression') },
+              started: function() { trackEvent('started') },
+              first_quartile: function() { trackEvent('first_quartile') },
+              midpoint: function() { trackEvent('midpoint') },
+              third_quartile: function() { trackEvent('third_quartile') },
+              complete: function() { trackEvent('complete') },
+              paused: function() { trackEvent('paused') },
+              resumed: function() { trackEvent('resumed') },
+              skipped: function() { trackEvent('skipped') },
+              user_close: function() { trackEvent('user_close') },
+              ad_error: function(e) { trackEvent('ad_error: ' + e.getError()) },
+              error: function(e) { trackEvent('error', e) },
             }
           };
         };
@@ -82,7 +89,10 @@
         var playerConfig = function(source, tagUrl, autoPlay) {
           var po = player.options;
           po.source = source;
+          po.autoPlay = false;
           po.googleImaHtml5PrerollPlugin = pluginConfig(tagUrl, autoPlay);
+
+          // console.log('po', po);
           return po;
         };
 
@@ -115,7 +125,7 @@
 
         // Handle browser autoplay policy
         canAutoplay.video({timeout: 800, muted: false}).then(function(o) {
-          var ap = o.result === true;
+          var ap = !isMobile && o.result === true;
           // console.log('autoplay', ap);
           player = buildPlayer(SINTEL, ap);
         });
