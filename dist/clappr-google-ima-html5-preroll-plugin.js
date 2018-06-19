@@ -466,6 +466,8 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
     key: '_onCoreReady',
     value: function _onCoreReady() {
       // Since Clappr 0.2.84, "CORE_READY" event is trigerred after create container on load
+      this._resetMaxDurationTimer();
+      this._resetNonLinearTimer();
       this._configure();
       this._loadImaSDK();
       this._initPlugin();
@@ -491,6 +493,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       this._nonLinearDuration = this.cfg.nonLinearDuration > 0 ? this.cfg.nonLinearDuration : 15000; // Default is 15 seconds
       this._imaLoadtimeout = this.cfg.imaLoadTimeout > 0 ? this.cfg.imaLoadTimeout : 6000; // Default is 6 seconds
       this._usePosterIcon = !!this.cfg.usePosterIcon;
+      this._maxDuration = this.cfg.maxDuration > 0 ? this.cfg.maxDuration : false; // Default is disabled
       // TODO: Add an option which is an array of plugin name to disable
     }
   }, {
@@ -784,12 +787,12 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, function (e) {
-        // Non-linear ad is displayed before content for duration
-        // FIXME: find a way to display it while playing content
         if (!e.getAd().isLinear()) {
-          setTimeout(function () {
-            _this5._playVideoContent();
-          }, _this5._nonLinearDuration);
+          // KNOWN ISSUE: non-linear ad is displayed *before* content for custom duration
+          // FIXME: find a way to display it while playing content
+          _this5._startNonLinearDurationTimer();
+        } else {
+          _this5._maxDuration && _this5._startMaxDurationTimer();
         }
 
         _this5._imaEvent('started');
@@ -842,6 +845,54 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       }
     }
   }, {
+    key: '_onDurationTimeout',
+    value: function _onDurationTimeout() {
+      this._imaEvent('error', new Error('Maximum duration of ' + this._maxDuration + ' ms reached'));
+
+      if (this._adsManager) {
+        // Signal ads manager to stop and get back to content
+        this._adsManager.stop();
+      } else {
+        // Should never happen
+        this._cleanup();
+        this._playVideoContent();
+      }
+    }
+  }, {
+    key: '_startMaxDurationTimer',
+    value: function _startMaxDurationTimer() {
+      var _this6 = this;
+
+      this._maxDurationTimer = setTimeout(function () {
+        _this6._onDurationTimeout();
+      }, this._maxDuration);
+    }
+  }, {
+    key: '_resetMaxDurationTimer',
+    value: function _resetMaxDurationTimer() {
+      if (typeof this._maxDurationTimer === 'number') {
+        clearTimeout(this._maxDurationTimer);
+        this._maxDurationTimer = undefined;
+      }
+    }
+  }, {
+    key: '_startNonLinearDurationTimer',
+    value: function _startNonLinearDurationTimer() {
+      var _this7 = this;
+
+      this._nonLinearTimer = setTimeout(function () {
+        _this7._playVideoContent();
+      }, this._nonLinearDuration);
+    }
+  }, {
+    key: '_resetNonLinearTimer',
+    value: function _resetNonLinearTimer() {
+      if (typeof this._nonLinearTimer === 'number') {
+        clearTimeout(this._nonLinearTimer);
+        this._nonLinearTimer = undefined;
+      }
+    }
+  }, {
     key: '_imaEvent',
     value: function _imaEvent(eventName, e) {
       _clappr.$.isFunction(this._events[eventName]) && this._events[eventName](e);
@@ -849,27 +900,27 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
   }, {
     key: '_setupOverlay',
     value: function _setupOverlay() {
-      var _this6 = this;
+      var _this8 = this;
 
       // Ad start must be done as the result of a user action on mobile.
       // For more details, read https://developers.google.com/interactive-media-ads/docs/sdks/html5/mobile_video
       if (!this._autostart) {
         var startAd = function startAd(e) {
           try {
-            _this6._clickOverlay.removeEventListener('click', startAd, false);
+            _this8._clickOverlay.removeEventListener('click', startAd, false);
             e.preventDefault();
             e.stopPropagation();
           } catch (err) {}
 
-          _this6._setOverlayIcon(_loader2.default
+          _this8._setOverlayIcon(_loader2.default
 
           // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
-          );_this6._playback.consent
+          );_this8._playback.consent
 
           // Request ad
-          ();_this6._createAdDisplayContainer();
-          _this6._adDisplayContainer.initialize // Must be called on overlay click
-          ();_this6._requestAd();
+          ();_this8._createAdDisplayContainer();
+          _this8._adDisplayContainer.initialize // Must be called on overlay click
+          ();_this8._requestAd();
         };
 
         this._setOverlayIcon(this._playSvg || _play2.default);
@@ -900,29 +951,31 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
   }, {
     key: '_playVideoContent',
     value: function _playVideoContent() {
-      var _this7 = this;
+      var _this9 = this;
 
       // Ensure video content playback is not already requested
       // This may happen with VPAID unexpected AdError
       if (this._playVideoContentRequested) return;
 
       this._playVideoContentRequested = true;
+      this._resetMaxDurationTimer();
+      this._resetNonLinearTimer();
 
       process.nextTick(function () {
-        _this7._enableControls();
-        _this7.$el.hide
+        _this9._enableControls();
+        _this9.$el.hide
 
         // Ensure recycleVideo playback option is enabled with mobile devices (Clappr 0.2.66 or greater)
-        ();var playbackOptions = _this7.core.options.playback || {};
+        ();var playbackOptions = _this9.core.options.playback || {};
         playbackOptions.recycleVideo = _clappr.Browser.isMobile;
 
         // Signal loading video content
-        _this7._isLoadingContent = true;
+        _this9._isLoadingContent = true;
 
         setTimeout(function () {
-          _this7.core.configure({
+          _this9.core.configure({
             playback: playbackOptions,
-            sources: _this7.core.options.sources,
+            sources: _this9.core.options.sources,
             autoPlay: true // Assume playback has user consent
           });
         }, 100);
