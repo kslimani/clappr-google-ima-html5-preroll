@@ -41,6 +41,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
   _onCoreReady() {
     // Since Clappr 0.2.84, "CORE_READY" event is trigerred after create container on load
+    this._resetMaxDurationTimer()
+    this._resetNonLinearTimer()
     this._configure()
     this._loadImaSDK()
     this._initPlugin()
@@ -63,6 +65,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._nonLinearDuration = this.cfg.nonLinearDuration > 0 ? this.cfg.nonLinearDuration : 15000 // Default is 15 seconds
     this._imaLoadtimeout = this.cfg.imaLoadTimeout > 0 ? this.cfg.imaLoadTimeout : 6000 // Default is 6 seconds
     this._usePosterIcon = !!this.cfg.usePosterIcon
+    this._maxDuration = this.cfg.maxDuration > 0 ? this.cfg.maxDuration : false // Default is disabled
     // TODO: Add an option which is an array of plugin name to disable
   }
 
@@ -316,7 +319,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
       this._onAdError(e)
     })
-    
+
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, () => {
       this._imaEvent('content_resume_requested')
       this._playVideoContent()
@@ -340,12 +343,12 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, (e) => {
-      // Non-linear ad is displayed before content for duration
-      // FIXME: find a way to display it while playing content
       if (! e.getAd().isLinear()) {
-        setTimeout(() => {
-          this._playVideoContent()
-        }, this._nonLinearDuration)
+        // KNOWN ISSUE: non-linear ad is displayed *before* content for custom duration
+        // FIXME: find a way to display it while playing content
+        this._startNonLinearDurationTimer()
+      } else {
+        this._maxDuration && this._startMaxDurationTimer()
       }
 
       this._imaEvent('started')
@@ -394,6 +397,41 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
     if (!this._adLoaded) {
       this._playVideoContent()
+    }
+  }
+
+  _onDurationTimeout() {
+    this._imaEvent('error', new Error(`Maximum duration of ${this._maxDuration} ms reached`))
+
+    if (this._adsManager) {
+      // Signal ads manager to stop and get back to content
+      this._adsManager.stop()
+    } else {
+      // Should never happen
+      this._cleanup()
+      this._playVideoContent()
+    }
+  }
+
+  _startMaxDurationTimer() {
+    this._maxDurationTimer = setTimeout(() => { this._onDurationTimeout() }, this._maxDuration)
+  }
+
+  _resetMaxDurationTimer() {
+    if (typeof this._maxDurationTimer === 'number') {
+      clearTimeout(this._maxDurationTimer)
+      this._maxDurationTimer = undefined
+    }
+  }
+
+  _startNonLinearDurationTimer() {
+    this._nonLinearTimer = setTimeout(() => { this._playVideoContent() }, this._nonLinearDuration)
+  }
+
+  _resetNonLinearTimer() {
+    if (typeof this._nonLinearTimer === 'number') {
+      clearTimeout(this._nonLinearTimer)
+      this._nonLinearTimer = undefined
     }
   }
 
@@ -458,6 +496,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     if (this._playVideoContentRequested) return
 
     this._playVideoContentRequested = true
+    this._resetMaxDurationTimer()
+    this._resetNonLinearTimer()
 
     process.nextTick(() => {
       this._enableControls()
