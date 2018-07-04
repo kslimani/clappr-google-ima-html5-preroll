@@ -468,6 +468,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       // Since Clappr 0.2.84, "CORE_READY" event is trigerred after create container on load
       this._resetMaxDurationTimer();
       this._resetNonLinearTimer();
+      this._resetPlugin();
       this._configure();
       this._loadImaSDK();
       this._initPlugin();
@@ -495,6 +496,11 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       this._usePosterIcon = !!this.cfg.usePosterIcon;
       this._maxDuration = this.cfg.maxDuration > 0 ? this.cfg.maxDuration : false; // Default is disabled
       // TODO: Add an option which is an array of plugin name to disable
+    }
+  }, {
+    key: '_resetPlugin',
+    value: function _resetPlugin() {
+      this._playVideoContentRequested = false;
     }
   }, {
     key: '_loadImaSDK',
@@ -537,7 +543,6 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       var _this3 = this;
 
       this._pluginIsReady = false;
-      this._playVideoContentRequested = false;
 
       // Ensure not loading video content (after ad played)
       if (this._isLoadingContent) {
@@ -756,8 +761,6 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       // Destroy any previously created ads manager
       this._destroyAdsManager();
 
-      this._adLoaded = false;
-
       this._adsManager = adsManagerLoadedEvent.getAdsManager(this._contentElement, adsRenderingSettings);
 
       this._adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, function (e) {
@@ -774,7 +777,6 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       });
 
       this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, function () {
-        _this5._adLoaded = true;
         _this5._imaEvent('loaded');
       });
 
@@ -840,9 +842,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       // console.log('onAdError: ' + adErrorEvent.getError())
       this._imaEvent('ad_error', adErrorEvent);
 
-      if (!this._adLoaded) {
-        this._playVideoContent();
-      }
+      this._playVideoContent();
     }
   }, {
     key: '_onDurationTimeout',
