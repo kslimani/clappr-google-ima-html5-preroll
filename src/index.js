@@ -43,6 +43,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     // Since Clappr 0.2.84, "CORE_READY" event is trigerred after create container on load
     this._resetMaxDurationTimer()
     this._resetNonLinearTimer()
+    this._resetPlugin()
     this._configure()
     this._loadImaSDK()
     this._initPlugin()
@@ -67,6 +68,10 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._usePosterIcon = !!this.cfg.usePosterIcon
     this._maxDuration = this.cfg.maxDuration > 0 ? this.cfg.maxDuration : false // Default is disabled
     // TODO: Add an option which is an array of plugin name to disable
+  }
+
+  _resetPlugin() {
+    this._playVideoContentRequested = false
   }
 
   _loadImaSDK() {
@@ -101,7 +106,6 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
 
   _initPlugin() {
     this._pluginIsReady = false
-    this._playVideoContentRequested = false
 
     // Ensure not loading video content (after ad played)
     if (this._isLoadingContent) {
@@ -312,8 +316,6 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     // Destroy any previously created ads manager
     this._destroyAdsManager()
 
-    this._adLoaded = false;
-
     this._adsManager = adsManagerLoadedEvent.getAdsManager(this._contentElement, adsRenderingSettings)
 
     this._adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
@@ -330,7 +332,6 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     })
 
     this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, () => {
-      this._adLoaded = true;
       this._imaEvent('loaded')
     })
 
@@ -395,9 +396,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     // console.log('onAdError: ' + adErrorEvent.getError())
     this._imaEvent('ad_error', adErrorEvent)
 
-    if (!this._adLoaded) {
-      this._playVideoContent()
-    }
+    this._playVideoContent()
   }
 
   _onDurationTimeout() {
