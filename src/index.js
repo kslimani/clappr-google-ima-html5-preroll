@@ -243,6 +243,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     // Skip ad scenario if IMA SDK is not successfully loaded
     // May happen if user has ad blocker, or Google server unavailable
     if (!this._imaLoadResult) {
+      this._imaEvent('error', new Error('Failed to load IMA SDK'))
       this._playVideoContent()
 
       return
