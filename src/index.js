@@ -501,6 +501,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._resetMaxDurationTimer()
     this._resetNonLinearTimer()
 
+    this._imaEvent('content_resume')
+
     process.nextTick(() => {
       this._enableControls()
       this.$el.hide()
