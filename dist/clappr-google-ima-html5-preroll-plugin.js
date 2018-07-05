@@ -482,7 +482,9 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
   }, {
     key: '_pluginError',
     value: function _pluginError(msg) {
-      throw new Error(this.name + ': ' + msg);
+      var e = new Error(this.name + ': ' + msg);
+      this._imaEvent('error', e);
+      throw e;
     }
   }, {
     key: '_configure',
@@ -686,6 +688,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       // Skip ad scenario if IMA SDK is not successfully loaded
       // May happen if user has ad blocker, or Google server unavailable
       if (!this._imaLoadResult) {
+        this._imaEvent('error', new Error('Failed to load IMA SDK'));
         this._playVideoContent();
 
         return;
@@ -960,6 +963,8 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       this._playVideoContentRequested = true;
       this._resetMaxDurationTimer();
       this._resetNonLinearTimer();
+
+      this._imaEvent('content_resume');
 
       process.nextTick(function () {
         _this9._enableControls();
