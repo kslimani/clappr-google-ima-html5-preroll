@@ -55,7 +55,9 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   }
 
   _pluginError(msg) {
-    throw new Error(this.name + ': ' + msg)
+    let e = new Error(this.name + ': ' + msg)
+    this._imaEvent('error', e)
+    throw e
   }
 
   _configure() {
