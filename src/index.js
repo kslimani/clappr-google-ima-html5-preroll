@@ -69,6 +69,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._imaLoadtimeout = this.cfg.imaLoadTimeout > 0 ? this.cfg.imaLoadTimeout : 6000 // Default is 6 seconds
     this._usePosterIcon = !!this.cfg.usePosterIcon
     this._maxDuration = this.cfg.maxDuration > 0 ? this.cfg.maxDuration : false // Default is disabled
+    this._locale = this.cfg.locale ? this.cfg.locale : false // Default is to not set custom locale
     // TODO: Add an option which is an array of plugin name to disable
   }
 
@@ -252,7 +253,10 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     }
 
     // Setup VPAID support
-    google.ima.settings.setVpaidMode(this._vpaidMode());
+    google.ima.settings.setVpaidMode(this._vpaidMode())
+
+    // Setup provided locale
+    this._locale && google.ima.settings.setLocale(this._locale)
 
     this._setupOverlay()
   }
@@ -296,8 +300,8 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     adsRequest.nonLinearAdSlotHeight = this._contentElement.offsetHeight
 
     // Assume playback is consented by user
-    adsRequest.setAdWillAutoPlay(true);
-    adsRequest.setAdWillPlayMuted(false);
+    adsRequest.setAdWillAutoPlay(true)
+    adsRequest.setAdWillPlayMuted(false)
 
     // requestAds() trigger _onAdsManagerLoaded() or _onAdError()
     this._adsLoader.requestAds(adsRequest)
