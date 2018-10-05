@@ -497,6 +497,8 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       this._imaLoadtimeout = this.cfg.imaLoadTimeout > 0 ? this.cfg.imaLoadTimeout : 6000; // Default is 6 seconds
       this._usePosterIcon = !!this.cfg.usePosterIcon;
       this._maxDuration = this.cfg.maxDuration > 0 ? this.cfg.maxDuration : false; // Default is disabled
+      this._locale = this.cfg.locale ? this.cfg.locale : false; // Default is to not set custom locale
+      this._disableLoader = this.cfg.disableLoader ? this.cfg.disableLoader : false; // Default is false (Loader is enabled)
       // TODO: Add an option which is an array of plugin name to disable
     }
   }, {
@@ -695,7 +697,10 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       }
 
       // Setup VPAID support
-      google.ima.settings.setVpaidMode(this._vpaidMode());
+      google.ima.settings.setVpaidMode(this._vpaidMode()
+
+      // Setup provided locale
+      );this._locale && google.ima.settings.setLocale(this._locale);
 
       this._setupOverlay();
     }
@@ -738,10 +743,10 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
 
       // Assume playback is consented by user
       adsRequest.setAdWillAutoPlay(true);
-      adsRequest.setAdWillPlayMuted(false);
+      adsRequest.setAdWillPlayMuted(false
 
       // requestAds() trigger _onAdsManagerLoaded() or _onAdError()
-      this._adsLoader.requestAds(adsRequest);
+      );this._adsLoader.requestAds(adsRequest);
     }
   }, {
     key: '_destroyAdsManager',
@@ -915,7 +920,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
             e.stopPropagation();
           } catch (err) {}
 
-          _this8._setOverlayIcon(_loader2.default
+          _this8._disableLoader || _this8._setOverlayIcon(_loader2.default
 
           // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
           );_this8._playback.consent
@@ -933,7 +938,7 @@ var ClapprGoogleImaHtml5PrerollPlugin = function (_UICorePlugin) {
       }
 
       // Otherwise, request ad
-      this._setOverlayIcon(_loader2.default);
+      this._disableLoader || this._setOverlayIcon(_loader2.default);
       this._createAdDisplayContainer();
       this._adDisplayContainer.initialize();
       this._requestAd();
