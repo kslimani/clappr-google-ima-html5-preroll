@@ -70,6 +70,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._usePosterIcon = !!this.cfg.usePosterIcon
     this._maxDuration = this.cfg.maxDuration > 0 ? this.cfg.maxDuration : false // Default is disabled
     this._locale = this.cfg.locale ? this.cfg.locale : false // Default is to not set custom locale
+    this._disableLoader = this.cfg.disableLoader ? this.cfg.disableLoader : false // Default is false (Loader is enabled)
     // TODO: Add an option which is an array of plugin name to disable
   }
 
@@ -456,7 +457,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
           e.stopPropagation()
         } catch (err) {}
 
-        this._setOverlayIcon(loadSvg)
+        this._disableLoader || this._setOverlayIcon(loadSvg)
 
         // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
         this._playback.consent()
@@ -474,7 +475,7 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     }
 
     // Otherwise, request ad
-    this._setOverlayIcon(loadSvg)
+    this._disableLoader || this._setOverlayIcon(loadSvg)
     this._createAdDisplayContainer()
     this._adDisplayContainer.initialize()
     this._requestAd()
