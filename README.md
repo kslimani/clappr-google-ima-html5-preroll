@@ -39,6 +39,7 @@ var player = new Clappr.Player({
     // nonLinearDuration: 20000, // Default is 15000 milliseconds
     // maxDuration: 30000, // Default is false (DISABLED)
     // locale: 'fr', // Any two-letter ISO 639-1 code. Default is false (Do not setup)
+    // disableLoader: true, // Default is false (Loader is enabled)
   }
 });
 ```
