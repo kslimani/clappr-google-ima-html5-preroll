@@ -17,7 +17,7 @@ Add both Clappr and the plugin scripts to your HTML:
 ```html
 <head>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
-  <script type="text/javascript" src="dist/clappr-google-ima-html5-preroll-plugin.js"></script> // yes, that's a long name ;-)
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clappr-google-ima-html5-preroll-plugin@latest/dist/clappr-google-ima-html5-preroll-plugin.min.js"></script> // yes, that's a long name ;-)
 </head>
 ```
 
