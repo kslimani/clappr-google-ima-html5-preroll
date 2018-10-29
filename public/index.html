@@ -109,6 +109,7 @@
           return new Clappr.Player({
             parentId: ".player",
             source: source,
+            // poster: 'https://static.playmedia-cdn.net/img/tv_programs/521001-521500/521317_xlarge.jpg',
             disableKeyboardShortcuts: true,
             disableVideoTagContextMenu: true,
             autoSeekFromUrl: false,
@@ -130,6 +131,7 @@
         canAutoplay.video({timeout: 800, muted: false}).then(function(o) {
           var ap = !isMobile && o.result === true;
           // console.log('autoplay', ap);
+          // ap = false;
           player = buildPlayer(SINTEL, ap);
         });
 
