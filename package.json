@@ -4,26 +4,28 @@
   "description": "Google IMA HTML5 preroll ad plugin for Clappr player.",
   "main": "dist/clappr-google-ima-html5-preroll-plugin.js",
   "scripts": {
-    "build": "webpack --progress",
-    "dist": "webpack --progress",
+    "build": "webpack --progress --mode production",
+    "dist": "webpack --progress --mode production",
     "release": "npm run build && npm run dist",
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server --mode development"
   },
   "author": "Karim Slimani <karim@playmedia.fr>",
   "license": "MIT",
   "repository": "kslimani/clappr-google-ima-html5-preroll-plugin",
   "devDependencies": {
-    "babel-core": "^6.24.1",
-    "babel-loader": "^7.0.0",
-    "babel-plugin-add-module-exports": "^0.2.1",
-    "babel-preset-es2015": "^6.24.1",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
+    "babel-loader": "^8.0.5",
+    "babel-plugin-add-module-exports": "^1.0.0",
     "compass-mixins": "^0.12.10",
-    "css-loader": "^0.28.4",
-    "node-sass": "^4.5.3",
-    "sass-loader": "^6.0.5",
-    "svg-inline-loader": "^0.7.1",
-    "webpack": "^2.6.1",
-    "webpack-dev-server": "^2.4.1",
-    "webpack-notifier": "^1.5.0"
+    "css-loader": "^2.1.0",
+    "node-sass": "^4.11.0",
+    "sass-loader": "^7.1.0",
+    "svg-inline-loader": "^0.8.0",
+    "uglifyjs-webpack-plugin": "^2.1.1",
+    "webpack": "^4.28.4",
+    "webpack-build-notifier": "^0.1.30",
+    "webpack-cli": "^3.2.1",
+    "webpack-dev-server": "^3.1.14"
   }
 }
