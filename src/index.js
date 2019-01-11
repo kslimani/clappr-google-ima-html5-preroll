@@ -30,13 +30,23 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   }
 
   bindEvents() {
-    this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_CONTAINERCHANGED, this._onMediaControlContainerChanged)
+    if (Events.CORE_ACTIVE_CONTAINER_CHANGED) {
+      // Clappr 0.3.0 or greater
+      this.listenTo(this.core, Events.CORE_ACTIVE_CONTAINER_CHANGED, this._onMediaControlContainerChanged)
+    } else {
+      this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_CONTAINERCHANGED, this._onMediaControlContainerChanged)
+    }
     this.listenTo(this.core, Events.CORE_READY, this._onCoreReady)
     Mediator.on(`${this.core.options.playerId}:${Events.PLAYER_RESIZE}`, this._onPlayerResize, this)
   }
 
   _onMediaControlContainerChanged() {
-    this.core.mediaControl.container.$el.append(this.el)
+    if (this.core.activeContainer) {
+      // Clappr 0.3.0 or greater
+      this.core.activeContainer.$el.append(this.el)
+    } else {
+      this.core.mediaControl.container.$el.append(this.el)
+    }
   }
 
   _onCoreReady() {
@@ -92,7 +102,13 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
   }
 
   _disableControls() {
-    this.core.disableMediaControl()
+    if (this.core.disableMediaControl) {
+      this.core.disableMediaControl()
+    } else {
+      // Clappr 0.3.0 or greater
+      let mediaControl = this.core.getPlugin('media_control')
+      mediaControl && mediaControl.disable()
+    }
     this._posterPlugin && this._posterPlugin.disable()
     this._clickToPausePlugin && this._clickToPausePlugin.disable()
     this._container.stopListening()
@@ -103,7 +119,13 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     if (this._controlsDisabled) {
       this._clickToPausePlugin && this._clickToPausePlugin.enable()
       this._posterPlugin && this._posterPlugin.enable()
-      this.core.enableMediaControl()
+      if (this.core.enableMediaControl) {
+        this.core.enableMediaControl()
+      } else {
+        // Clappr 0.3.0 or greater
+        let mediaControl = this.core.getPlugin('media_control')
+        mediaControl && mediaControl.enable()
+      }
       this._controlsDisabled = false
     }
   }
@@ -122,13 +144,25 @@ export default class ClapprGoogleImaHtml5PrerollPlugin extends UICorePlugin {
     this._cleanup()
 
     // Get current playback. (To get playback element)
-    this._playback = this.core.getCurrentPlayback()
+    if (this.core.activePlayback) {
+      // Clappr 0.3.0 or greater
+      this._playback = this.core.activePlayback
+    } else {
+      this._playback = this.core.getCurrentPlayback()
+    }
+
     if (!this._playback) {
       this._pluginError('failed to get Clappr playback')
     }
 
     // Get current container. (To disable bindings during ad playback)
-    this._container = this.core.getCurrentContainer()
+    if (this.core.activeContainer) {
+      // Clappr 0.3.0 or greater
+      this._container = this.core.activeContainer
+    } else {
+      this._container = this.core.getCurrentContainer()
+    }
+
     if (!this._container) {
       this._pluginError('failed to get Clappr current container')
     }
