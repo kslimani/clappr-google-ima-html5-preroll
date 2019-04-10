@@ -484,7 +484,12 @@ function (_UICorePlugin) {
 
       google.ima.settings.setVpaidMode(this._vpaidMode()); // Setup provided locale
 
-      this._locale && google.ima.settings.setLocale(this._locale);
+      this._locale && google.ima.settings.setLocale(this._locale); // Signal that IMA SDK is loaded
+
+      this._imaEvent('ima_loaded', {
+        target: this,
+        ima: google.ima
+      });
 
       this._setupOverlay();
     }
