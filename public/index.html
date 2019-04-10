@@ -68,6 +68,10 @@
             // locale: 'fr', // Default is false (Do not setup)
             // disableLoader: true, // Default is false (Loader is enabled)
             events: {
+              ima_loaded: function(o) {
+                trackEvent('ima_loaded', o)
+                // o.ima.settings.setDisableCustomPlaybackForIOS10Plus(true);
+              },
               content_resume_requested: function() { trackEvent('content_resume_requested') },
               content_pause_requested: function() { trackEvent('content_pause_requested') },
               loaded: function() { trackEvent('loaded') },
