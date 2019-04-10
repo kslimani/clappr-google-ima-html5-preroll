@@ -54,7 +54,12 @@ For more details, see [Google IMA events types](https://developers.google.com/in
   // [...]
   googleImaHtml5PrerollPlugin: {
     events: {
-      ima_loaded: function(o) { console.log('ima_loaded', o) }, // o.target is plugin instance and o.ima is google.ima object
+      ima_loaded: function(o) {
+        // This event signal that ima SDK is loaded
+        // o.target is plugin instance and o.ima is google.ima object
+        console.log('ima_loaded', o)
+        // o.ima.settings.setDisableCustomPlaybackForIOS10Plus(true);
+      },
       content_resume_requested: function() { console.log('content_resume_requested') },
       content_pause_requested: function() { console.log('content_pause_requested') },
       loaded: function() { console.log('loaded') },
