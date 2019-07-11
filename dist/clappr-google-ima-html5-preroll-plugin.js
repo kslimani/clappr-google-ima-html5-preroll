@@ -104,7 +104,7 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports["default"] = void 0;
 
 var _clappr = __webpack_require__(2);
 
@@ -118,7 +118,7 @@ var _play = _interopRequireDefault(__webpack_require__(7));
 
 var _loader = _interopRequireDefault(__webpack_require__(8));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -272,7 +272,7 @@ function (_UICorePlugin) {
       // Ensure is lazy loaded once (only if tag is filled)
       if (this._imaIsloading || this._imaIsloaded || !this._tag) return;
       this._imaIsloading = true;
-      (0, _imaLoader.default)(function (result) {
+      (0, _imaLoader["default"])(function (result) {
         _this2._imaLoadResult = result;
         _this2._imaIsloading = false;
         _this2._imaIsloaded = true;
@@ -711,7 +711,7 @@ function (_UICorePlugin) {
             e.stopPropagation();
           } catch (err) {}
 
-          _this8._disableLoader || _this8._setOverlayIcon(_loader.default); // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
+          _this8._disableLoader || _this8._setOverlayIcon(_loader["default"]); // Use playback "consent" feature to capture user action (Clappr 0.2.66 or greater)
 
           _this8._playback.consent(); // Request ad
 
@@ -724,7 +724,7 @@ function (_UICorePlugin) {
           _this8._requestAd();
         };
 
-        this._setOverlayIcon(this._playSvg || _play.default);
+        this._setOverlayIcon(this._playSvg || _play["default"]);
 
         this._clickOverlay.addEventListener('click', startAd, false);
 
@@ -732,7 +732,7 @@ function (_UICorePlugin) {
       } // Otherwise, request ad
 
 
-      this._disableLoader || this._setOverlayIcon(_loader.default);
+      this._disableLoader || this._setOverlayIcon(_loader["default"]);
 
       this._createAdDisplayContainer();
 
@@ -812,7 +812,7 @@ function (_UICorePlugin) {
       this._$clickOverlay = (0, _clappr.$)("<div />").addClass("preroll-overlay").attr('data-preroll', '');
       this.$el.append(this._$adContainer);
       this.$el.append(this._$clickOverlay);
-      this.$el.append(_clappr.Styler.getStyleFor(_style.default));
+      this.$el.append(_clappr.Styler.getStyleFor(_style["default"]));
       this._adContainer = this._$adContainer[0];
       this._clickOverlay = this._$clickOverlay[0];
       return this;
@@ -857,7 +857,7 @@ function (_UICorePlugin) {
   return ClapprGoogleImaHtml5PrerollPlugin;
 }(_clappr.UICorePlugin);
 
-exports.default = ClapprGoogleImaHtml5PrerollPlugin;
+exports["default"] = ClapprGoogleImaHtml5PrerollPlugin;
 module.exports = exports.default;
 /* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(1)))
 
@@ -1066,7 +1066,6 @@ exports = module.exports = __webpack_require__(4)(false);
 exports.push([module.i, ".google-ima-html5-preroll-plugin[data-preroll] {\n  position: absolute;\n  top: 0;\n  left: 0;\n  width: 100%;\n  height: 100%;\n  text-align: left; }\n  .google-ima-html5-preroll-plugin[data-preroll] .preroll-container[data-preroll] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-container[data-preroll] .ima-container[data-preroll] {\n      position: absolute;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%; }\n  .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll] {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    z-index: 1337;\n    cursor: pointer;\n    overflow: hidden;\n    display: none; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll]:hover .preroll-overlay-icon[data-preroll] {\n      opacity: 1; }\n    .google-ima-html5-preroll-plugin[data-preroll] .preroll-overlay[data-preroll] .preroll-overlay-icon[data-preroll] {\n      position: relative;\n      width: 100%;\n      height: 25%;\n      top: 50%;\n      transform: translateY(-50%);\n      opacity: 0.75; }\n", ""]);
 
 
-
 /***/ }),
 /* 4 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -1079,6 +1078,7 @@ exports.push([module.i, ".google-ima-html5-preroll-plugin[data-preroll] {\n  pos
   Author Tobias Koppers @sokra
 */
 // css base code, injected by the css-loader
+// eslint-disable-next-line func-names
 module.exports = function (useSourceMap) {
   var list = []; // return the list of modules as css string
 
@@ -1087,22 +1087,25 @@ module.exports = function (useSourceMap) {
       var content = cssWithMappingToString(item, useSourceMap);
 
       if (item[2]) {
-        return '@media ' + item[2] + '{' + content + '}';
-      } else {
-        return content;
+        return "@media ".concat(item[2], "{").concat(content, "}");
       }
+
+      return content;
     }).join('');
   }; // import a list of modules into the list
+  // eslint-disable-next-line func-names
 
 
   list.i = function (modules, mediaQuery) {
     if (typeof modules === 'string') {
+      // eslint-disable-next-line no-param-reassign
       modules = [[null, modules, '']];
     }
 
     var alreadyImportedModules = {};
 
     for (var i = 0; i < this.length; i++) {
+      // eslint-disable-next-line prefer-destructuring
       var id = this[i][0];
 
       if (id != null) {
@@ -1110,8 +1113,8 @@ module.exports = function (useSourceMap) {
       }
     }
 
-    for (i = 0; i < modules.length; i++) {
-      var item = modules[i]; // skip already imported module
+    for (var _i = 0; _i < modules.length; _i++) {
+      var item = modules[_i]; // skip already imported module
       // this implementation is not 100% perfect for weird media query combinations
       // when a module is imported multiple times with different media queries.
       // I hope this will never occur (Hey this way we have smaller bundles)
@@ -1120,7 +1123,7 @@ module.exports = function (useSourceMap) {
         if (mediaQuery && !item[2]) {
           item[2] = mediaQuery;
         } else if (mediaQuery) {
-          item[2] = '(' + item[2] + ') and (' + mediaQuery + ')';
+          item[2] = "(".concat(item[2], ") and (").concat(mediaQuery, ")");
         }
 
         list.push(item);
@@ -1132,7 +1135,8 @@ module.exports = function (useSourceMap) {
 };
 
 function cssWithMappingToString(item, useSourceMap) {
-  var content = item[1] || '';
+  var content = item[1] || ''; // eslint-disable-next-line prefer-destructuring
+
   var cssMapping = item[3];
 
   if (!cssMapping) {
@@ -1142,7 +1146,7 @@ function cssWithMappingToString(item, useSourceMap) {
   if (useSourceMap && typeof btoa === 'function') {
     var sourceMapping = toComment(cssMapping);
     var sourceURLs = cssMapping.sources.map(function (source) {
-      return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */';
+      return "/*# sourceURL=".concat(cssMapping.sourceRoot).concat(source, " */");
     });
     return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
   }
@@ -1154,8 +1158,8 @@ function cssWithMappingToString(item, useSourceMap) {
 function toComment(sourceMap) {
   // eslint-disable-next-line no-undef
   var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
-  var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
-  return '/*# ' + data + ' */';
+  var data = "sourceMappingURL=data:application/json;charset=utf-8;base64,".concat(base64);
+  return "/*# ".concat(data, " */");
 }
 
 /***/ }),
@@ -1186,7 +1190,7 @@ exports.svg = svg;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = _default;
+exports["default"] = _default;
 
 /**
  * Google IMA HTML5 SDK lazy loader.
