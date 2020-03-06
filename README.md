@@ -1,6 +1,11 @@
-# Google IMA HTML5 preroll ad plugin for Clappr player
+# END OF LIFE
 
-UPDATE: The [clappr-ima-plugin](https://github.com/kslimani/clappr-ima-plugin) plugin is available and also offers support for VMAP. (pre-roll, mid-roll & post-roll).
+This plugin is __"deprecated"__ and may not be compatible with future Clappr player releases.
+
+Please consider using [clappr-ima-plugin](https://github.com/kslimani/clappr-ima-plugin) plugin.
+
+
+## Google IMA HTML5 preroll ad plugin for Clappr player
 
 [Google IMA HTML5 SDK (v3)](https://developers.google.com/interactive-media-ads/docs/sdks/html5/quickstart) __LINEAR PREROLL AD ONLY__ ad plugin for [Clappr](https://github.com/clappr/clappr) video player.
 
@@ -12,7 +17,7 @@ On mobile devices, it support only [Clappr playbacks](https://github.com/clappr/
 
 See also [demo page](https://kslimani.github.io/clappr-google-ima-html5-preroll/) hosted on Github.
 
-# Usage
+## Usage
 
 Add both Clappr and the plugin scripts to your HTML:
 
@@ -83,7 +88,7 @@ For more details, see [Google IMA events types](https://developers.google.com/in
   // [...]
 ```
 
-# Development
+## Development
 
 Install dependencies :
 
