@@ -1,7 +1,6 @@
 // Webpack 4 configuration
 const path = require('path')
-const webpack = require('webpack')
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin")
+const TerserPlugin = require('terser-webpack-plugin');
 const NotifierPlugin = require('webpack-build-notifier')
 
 var name = 'clappr-google-ima-html5-preroll-plugin'
@@ -10,14 +9,8 @@ var outputFile, plugins = [], optimization = {}
 if (process.env.npm_lifecycle_event === 'dist') {
   outputFile = name + '.min.js'
   optimization.minimizer = [
-    new UglifyJsPlugin({
-      cache: true,
-      parallel: true,
-      uglifyOptions: {
-        output: {
-          comments: false,
-        },
-      }
+    new TerserPlugin({
+      cache: true, // TODO: set to false if Webpack upgraded to 5.x ?
     }),
   ]
 } else {
