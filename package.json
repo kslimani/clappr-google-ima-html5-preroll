@@ -23,7 +23,7 @@
     "sass-loader": "^7.1.0",
     "svg-inline-loader": "^0.8.0",
     "terser-webpack-plugin": "^4.2.3",
-    "webpack": "^4.46",
+    "webpack": "^5.94",
     "webpack-build-notifier": "^2.1.1",
     "webpack-cli": "^4.4.0",
     "webpack-dev-server": "^3.11.2"
